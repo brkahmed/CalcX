@@ -1,4 +1,6 @@
-// test_calc.c - Full test suite for your calculator
+// ! TESTS GENERATE BY CHATGPT
+// ! UPDATE IT LATER
+
 #define _GNU_SOURCE
 
 #include <stdio.h> 
