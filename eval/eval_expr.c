@@ -71,7 +71,7 @@ static double parse_term(const char **curr) {
         skip_space(curr);
         if (**curr == '*') {
             ++(*curr);
-            result *= parse_term(curr);
+            result *= parse_factor(curr);
         } else if (**curr == '(') {
             ++(*curr);
             result *= parse_expr(curr);
@@ -80,9 +80,12 @@ static double parse_term(const char **curr) {
             result *= parse_number_or_function(curr);
         } else if (**curr == '/') {
             ++(*curr);
-            tmp = parse_term(curr);
+            tmp = parse_factor(curr);
             if (tmp == 0) RAISE(eval_expr_err_handler, DivisionByZeroError, "Division by zero");
             result /= tmp;
+        } else if (**curr == '%') {
+            ++(*curr);
+            result = fmod(result, parse_factor(curr));
         } else
             break;
     }
