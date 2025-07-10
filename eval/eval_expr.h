@@ -2,7 +2,7 @@
 #define EVAL_EXPR_H
 
 
-#include "../include/error.h"
+#include "error.h"
 
 #define MAX_IDENTIFIER_LEN (size_t) 64
 #define MAX_FUNCTION_ARGS (size_t) 1024
