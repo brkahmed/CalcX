@@ -99,6 +99,10 @@ static double parse_factor(const char **curr) {
         ++(*curr);
         result = parse_expr(curr);
         eat_char(curr, ')');
+    } else if (**curr == '|') {
+        ++(*curr);
+        result = fabs(parse_expr(curr));
+        eat_char(curr, '|');
     } else if (**curr == '-') {
         ++(*curr);
         return -parse_factor(curr);
