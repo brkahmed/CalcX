@@ -8,12 +8,14 @@
 
 
 static double factorial(double x) {
-    if (trunc(x) != x) return tgamma(x + 1);
     if (x == 0) return 1;
-    double result = x--;
-    while (x > 1)
-        result *= x--;
-    return result;
+    if (x > 0 && trunc(x) == x) {
+        double result = x--;
+        while (x > 1)
+            result *= x--;
+        return result;
+    }
+    return tgamma(x + 1);
 }
 
 static double min(double nums[], size_t len) {
