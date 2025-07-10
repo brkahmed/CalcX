@@ -64,13 +64,18 @@ You can omit `*` in common cases:
 
 ---
 
-### 🔹 Constants
+## 🔣 Built-in Constants
 
-| Name  | Value                  |
-|-------|------------------------|
-| `pi`  | 3.141592...            |
-| `e`   | 2.718281...            |
-| `ans` | Last evaluated result  |
+| Name    | Value                 | Description                                                                |
+|---------|--------------------------------|----------------------------------------------------------------------------|
+| `pi`    | 3.141592653589793     | Ratio of a circle’s circumference to its diameter                          |
+| `e`     | 2.718281828459045     | Euler’s number (base of natural logarithm)                                 |
+| `tau`   | 6.283185307179586     | Equal to `2 * pi`; represents a full turn in radians                       |
+| `phi`   | 1.618033988749895     | Golden ratio: `(1 + sqrt(5)) / 2`                                          |
+| `deg`   | 0.017453292519943295  | Radians per degree: `pi / 180` (use to convert degrees → radians)          |
+| `rad`   | 57.29577951308232     | Degrees per radian: `180 / pi` (use to convert radians → degrees)          |
+| `ans`   | (last result)         | Value of the previous expression result. Useful for chained calculations.  |
+
 
 ---
 
