@@ -10,7 +10,7 @@
 #include <ctype.h>
 
 #include <math.h>
-#include "function.c"
+#include "utility.c"
 
 error_handler eval_expr_err_handler;
 double last_result = 0;
@@ -169,6 +169,10 @@ static double parse_number(const char **curr) {
 static double parse_const(const char *name) {
     AddConst("pi", M_PI);
     AddConst("e", M_E);
+    AddConst("tau", M_TAU);
+    AddConst("phi", M_PHI);
+    AddConst("deg", M_DEG);
+    AddConst("rad", M_RAD);
     AddConst("ans", last_result);
     return NAN;
 }
