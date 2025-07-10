@@ -22,7 +22,7 @@ TRY(eval_expr_err_handler) { \
         printf("[PASS] %s = %.8f\n", expr_str, result); \
         passed_tests++; \
     } else { \
-        printf("[FAIL] %s = %.8f (expected %.8f)\n", expr_str, result, (expected_val)); \
+        printf("[FAIL] %s = %.8f (expected %.8f)\n", expr_str, result, (double) expected_val); \
     } \
 } EXCEPT() { \
     printf("[FAIL] %s raised an error unexpectedly\n", expr_str); \
