@@ -1,5 +1,5 @@
-#ifndef EVAL_EXPR_IN_ONE_PASS_H
-#define EVAL_EXPR_IN_ONE_PASS_H
+#ifndef EVAL_EXPR_H
+#define EVAL_EXPR_H
 
 
 #include "../include/error.h"
