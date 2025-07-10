@@ -203,19 +203,19 @@ static double parse_function(const char *name, double *args, size_t args_count) 
     AddOneArgFunc("acosh", acosh); AddOneArgFunc("arccosh", acosh);
     AddOneArgFunc("atanh", atanh); AddOneArgFunc("arctanh", atanh);
 
-    // Rounding
-    AddOneArgFunc("ceil", ceil);
-    AddOneArgFunc("floor", floor);
-    AddOneArgFunc("trunc", trunc);
-    AddOneArgFunc("round", round);
-    AddOneArgFunc("rint", rint);
-
     // Exp and log
     AddOneArgFunc("exp", exp);
     AddOneArgFunc("exp2", exp2);
     AddOneArgFunc("ln", log); AddOneArgFunc("log", log);
     AddOneArgFunc("log10", log10);
     AddOneArgFunc("log2", log2);
+
+    // Rounding
+    AddOneArgFunc("ceil", ceil);
+    AddOneArgFunc("floor", floor);
+    AddOneArgFunc("trunc", trunc);
+    AddOneArgFunc("round", round);
+    AddOneArgFunc("rint", rint);
 
     // Power and root
     AddOneArgFunc("sqrt", sqrt);
