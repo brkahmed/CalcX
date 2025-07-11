@@ -12,6 +12,8 @@
 #include <math.h>
 #include "utility.c"
 
+#define str(c) ((char[]) {c, '\0'}) // ? convert character to string
+
 error_handler eval_expr_err_handler;
 double last_result = 0;
 
@@ -36,7 +38,7 @@ static void eat_char(const char **curr, char c) {
     if (**curr == c)
         ++(*curr);
     else
-        RAISE(eval_expr_err_handler, SyntaxError, "Expected a '%c' character got '%c'", c, **curr);
+        RAISE(eval_expr_err_handler, SyntaxError, "Expected a '%c' character got '%s'", c, (**curr == '\0') ? "END OF EXPRESSION": str(**curr));
 }
 
 double eval_expr(const char *expr) {
@@ -149,7 +151,7 @@ static double parse_number_or_function(const char **curr) {
         size_t args_count = parse_function_args(curr, args);
         return parse_function(identifier, args, args_count);
     }
-    RAISE(eval_expr_err_handler, SyntaxError, "Expected a number or identifier got '%c'", (**curr == '\0') ? '"' : **curr);
+    RAISE(eval_expr_err_handler, SyntaxError, "Expected a number or identifier got '%s'", (**curr == '\0') ? "END OF EXPRESSION" : str(**curr));
 }
 
 static double parse_number(const char **curr) {
