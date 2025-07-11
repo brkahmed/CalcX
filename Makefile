@@ -1,8 +1,8 @@
 CC = gcc
 CFLAGS = -std=c99 -Wall -Wextra
-INC = -Iinclude -Ieval
+INC = -Iinclude
 
-EVAL_SRC = eval/eval_expr.c
+EVAL_SRC = eval/eval.c
 SRC = main.c $(EVAL_SRC)
 TEST_SRC = test/test_eval.c
 OUT_DIR = build

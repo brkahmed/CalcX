@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "eval_expr.h"
+#include "eval.h"
 
 int main(int argc, char const *argv[]) {
     if (argc > 2) {
