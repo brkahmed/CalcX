@@ -175,11 +175,11 @@ Your input may trigger descriptive errors like:
 ```text
 >>> 5!
 120
->>> 2^3 + sqrt(9)
+>>> 2^3 + sqrt 9
 11
 >>> sin(pi / 2)
 1
->>> factorial(5.0)
+>>> factorial(5)
 120
 >>> min(3, 5, -1)
 -1
