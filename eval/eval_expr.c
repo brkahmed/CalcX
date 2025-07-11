@@ -73,9 +73,7 @@ static double parse_term(const char **curr) {
             ++(*curr);
             result *= parse_factor(curr);
         } else if (**curr == '(') {
-            ++(*curr);
-            result *= parse_expr(curr);
-            eat_char(curr, ')');
+            result *= parse_factor(curr);
         } else if (isalpha(**curr)) {
             result *= parse_number_or_function(curr);
         } else if (**curr == '/') {
