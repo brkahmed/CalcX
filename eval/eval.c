@@ -16,6 +16,7 @@
 
 error_handler eval_expr_err_handler;
 double last_result = 0;
+static int recursion_depth;
 
 static double parse_expr(const char **curr);
 static double parse_term(const char **curr);
@@ -38,10 +39,11 @@ static void eat_char(const char **curr, char c) {
     if (**curr == c)
         ++(*curr);
     else
-        RAISE(eval_expr_err_handler, SyntaxError, "Expected a '%c' character got '%s'", c, (**curr == '\0') ? "END OF EXPRESSION": str(**curr));
+        RAISE(eval_expr_err_handler, SyntaxError, "Expected a '%c' character got '%s'", c, (**curr == '\0') ? "END OF EXPRESSION" : str(**curr));
 }
 
 double eval_expr(const char *expr) {
+    recursion_depth = 0;
     double result = parse_expr(&expr);
     if (*expr != '\0')
         RAISE(eval_expr_err_handler, SyntaxError, "Unsupported character; '%c'", *expr);
@@ -50,6 +52,8 @@ double eval_expr(const char *expr) {
 }
 
 static double parse_expr(const char **curr) {
+    if (recursion_depth++ > MAX_RECURSION_DEPTH)
+        RAISE(eval_expr_err_handler, MaxRecursionDepthError, "Maximum recursion depth reached");
     double result = parse_term(curr);
     while (true) {
         skip_space(curr);
@@ -62,6 +66,7 @@ static double parse_expr(const char **curr) {
         } else
             break;
     }
+    recursion_depth--;
     return result;
 }
 
@@ -95,6 +100,12 @@ static double parse_term(const char **curr) {
 static double parse_factor(const char **curr) {
     skip_space(curr);
     double result;
+    bool is_negative = false;
+    while (**curr == '+' || **curr == '-') {
+        if (**curr == '-') is_negative = !is_negative;
+        ++(*curr);
+        skip_space(curr);
+    }
     if (**curr == '(') {
         ++(*curr);
         result = parse_expr(curr);
@@ -103,15 +114,11 @@ static double parse_factor(const char **curr) {
         ++(*curr);
         result = fabs(parse_expr(curr));
         eat_char(curr, '|');
-    } else if (**curr == '-') {
-        ++(*curr);
-        return -parse_factor(curr);
-    } else if (**curr == '+') {
-        ++(*curr);
-        return parse_factor(curr);
     } else {
         result = parse_number_or_function(curr);
     }
+    // ? set the sign
+    if (is_negative) result = -result;
     // ? code here handle the result from a expression like (2+3) or number like 5
     skip_space(curr);
     result = handle_factorial(curr, result); // ? return the same number if there is no '!'
