@@ -122,7 +122,7 @@ static double parse_factor(const char **curr) {
 static double handle_expo(const char **curr, double x) {
     while (**curr == '^') {
         ++(*curr);
-        x = pow(x, parse_expr(curr));
+        x = pow(x, parse_factor(curr));
     }
     return x;
 }
