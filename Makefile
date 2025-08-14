@@ -1,33 +1,57 @@
 CC = gcc
 CFLAGS = -std=c99 -Wall -Wextra
+CFLAGS += -I$(REPLXX_DIR)/include   # add replxx include path
+LDFLAGS = -lm                       # base link flags
+LDLIBS = $(LIBS) -lstdc++ -pthread
 
+# program output
+PROGRAM = calc
 OUT_DIR = build
 SRC = main.c
-LIBS = eval/libeval.a
+
+LIBS = $(EVAL_LIB) $(REPLXX_LIB)
+
+EVAL_LIB = eval/libeval.a
+
+# replxx paths
+REPLXX_DIR = replxx
+REPLXX_BUILD = $(REPLXX_DIR)/build
+REPLXX_LIB = $(REPLXX_BUILD)/libreplxx.a
 
 .PHONY: release debug test clean
 
-release: test
-	@echo "[PROJECT] Building in release mode..."
-	@mkdir -p $(OUT_DIR)
-	@$(CC) $(CFLAGS) -O3 $(SRC) $(LIBS) -o $(OUT_DIR)/calc -lm
-	@echo "[PROJECT] ✅ Build complete: $(OUT_DIR)/calc"
+release: CFLAGS += -O3
+release: test program
 
-debug: $(LIBS)
-	@echo "[PROJECT] Building in debug mode..."
-	@mkdir -p $(OUT_DIR)
-	@$(CC) $(CFLAGS) -g -DDEBUG $(SRC) $(LIBS) -o $(OUT_DIR)/calc_debug -lm
-	@echo "[PROJECT] ✅ Build complete: $(OUT_DIR)/calc_debug"
+debug: CFLAGS += -g -DDEBUG
+debug: PROGRAM += _debug
+debug: program
 
-test: $(LIBS)
+program: $(OUT_DIR) $(EVAL_LIB) $(REPLXX_LIB)
+	@echo "[PROJECT] Building $(PROGRAM)..."
+	@$(CC) $(CFLAGS) $(SRC) $(LDLIBS) -o $(OUT_DIR)/$(PROGRAM) $(LDFLAGS)
+	@echo "[PROJECT] ✅ Build complete: $(OUT_DIR)/$(PROGRAM)"
+
+test: $(EVAL_LIB)
 	@echo "[PROJECT] Running eval tests before build..."
 	@$(MAKE) -C eval test
 
-$(LIBS):
+$(EVAL_LIB):
 	@echo "[PROJECT] Building eval library..."
 	@$(MAKE) -C eval
+
+$(REPLXX_LIB):
+	@echo "[REPLXX] Building replxx..."
+	@mkdir -p $(REPLXX_BUILD)
+	@cd $(REPLXX_BUILD) && cmake -DCMAKE_BUILD_TYPE=Release ..
+	@$(MAKE) -C $(REPLXX_BUILD)
+
+$(OUT_DIR):
+	@mkdir -p $(OUT_DIR)
 
 clean:
 	@echo "[PROJECT] Cleaning..."
 	@rm -rf $(OUT_DIR)
 	@$(MAKE) -C eval clean
+	# Uncomment if you want to clean replxx as well (slower rebuilds):
+	# $(MAKE) -C $(REPLXX_BUILD) clean
