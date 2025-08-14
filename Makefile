@@ -1,39 +1,33 @@
 CC = gcc
 CFLAGS = -std=c99 -Wall -Wextra
-INC = -Iinclude
 
-EVAL_SRC = eval/eval.c
-SRC = main.c $(EVAL_SRC)
-TEST_SRC = test/test_eval.c
 OUT_DIR = build
+SRC = main.c
+LIBS = eval/libeval.a
 
-DEBUG_BIN = $(OUT_DIR)/calc_debug
-RELEASE_BIN = $(OUT_DIR)/calc
-TEST_BIN = $(OUT_DIR)/test
+.PHONY: release debug test clean
 
-all: release
-
-debug: CFLAGS += -g -DDEBUG
-debug: $(DEBUG_BIN)
-
-release: CFLAGS += -O3
-release: $(RELEASE_BIN)
-
-$(DEBUG_BIN): $(SRC)
+release: test
+	@echo "[PROJECT] Building in release mode..."
 	@mkdir -p $(OUT_DIR)
-	$(CC) $(CFLAGS) $(INC) $^ -o $@ -lm
+	@$(CC) $(CFLAGS) -O3 $(SRC) $(LIBS) -o $(OUT_DIR)/calc -lm
+	@echo "[PROJECT] ✅ Build complete: $(OUT_DIR)/calc"
 
-$(RELEASE_BIN): $(SRC)
+debug: $(LIBS)
+	@echo "[PROJECT] Building in debug mode..."
 	@mkdir -p $(OUT_DIR)
-	$(CC) $(CFLAGS) $(INC) $^ -o $@ -lm
+	@$(CC) $(CFLAGS) -g -DDEBUG $(SRC) $(LIBS) -o $(OUT_DIR)/calc_debug -lm
+	@echo "[PROJECT] ✅ Build complete: $(OUT_DIR)/calc_debug"
 
-test: CFLAGS += -g -DDEBUG
-test: $(TEST_BIN)
-	./$(TEST_BIN)
+test: $(LIBS)
+	@echo "[PROJECT] Running eval tests before build..."
+	@$(MAKE) -C eval test
 
-$(TEST_BIN): $(TEST_SRC) $(EVAL_SRC)
-	@mkdir -p $(OUT_DIR)
-	$(CC) $(CFLAGS) $(INC) $^ -o $@ -lm
+$(LIBS):
+	@echo "[PROJECT] Building eval library..."
+	@$(MAKE) -C eval
 
 clean:
-	rm -rf $(OUT_DIR)
+	@echo "[PROJECT] Cleaning..."
+	@rm -rf $(OUT_DIR)
+	@$(MAKE) -C eval clean

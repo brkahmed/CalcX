@@ -1,4 +1,6 @@
 build/
+test_*
+*.a
 *.o
 *.out
 *.exe

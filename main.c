@@ -1,16 +1,17 @@
 #define _GNU_SOURCE // required to use getline function
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
-#include "eval.h"
+#include "eval/eval.h"
 
 int main(int argc, char const *argv[]) {
     if (argc > 2) {
         ERROR("Usage %s [expression]", argv[0]);
         return -1;
-    } if (argc == 2) {
+    }
+    if (argc == 2) {
         TRY(eval_expr_err_handler)
             printf("%f\n", eval_expr(argv[1]));
         EXCEPT()

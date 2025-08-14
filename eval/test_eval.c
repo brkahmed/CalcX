@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+
 #include "eval.h"
 
 #define EPSILON 1e-9
@@ -87,17 +88,17 @@ int main(void) {
     test_ok("3!!", 720);
     test_ok("4!*2", 48);
     test_ok("3*4!*2", 48 * 3);
-    test_ok("pi!", tgamma(M_PI+1));
+    test_ok("pi!", tgamma(M_PI + 1));
     test_ok("7 % 4", 3);
     test_ok("7 % 4 ^ 2", 7); // 7 % (4^2)
-    test_ok("9 % 5!", 9); 
+    test_ok("9 % 5!", 9);
 
     // Implicit multiplication
     test_ok("2pi", 2 * M_PI);
     test_ok("2(3+4)", 14);
-    test_ok("2cos(0)", 2 );
+    test_ok("2cos(0)", 2);
     test_ok("(5+6)(2+3)", 55);
-    test_ok("(5+6)/2(2+3)", 55.0/ 2);
+    test_ok("(5+6)/2(2+3)", 55.0 / 2);
     test_ok("2/3pi", 2.0 / 3 * M_PI);
     test_ok("2asin(sin(90deg)+tau)rad", 180);
 
