@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -std=c99 -Wall -Wextra
-CFLAGS += -I$(REPLXX_DIR)/include   # add replxx include path
-LDFLAGS = -lm                       # base link flags
+CFLAGS += -I$(REPLXX_DIR)/include
+LDFLAGS = -lm
 LDLIBS = $(LIBS) -lstdc++ -pthread
 
 # program output
@@ -18,7 +18,7 @@ REPLXX_DIR = replxx
 REPLXX_BUILD = $(REPLXX_DIR)/build
 REPLXX_LIB = $(REPLXX_BUILD)/libreplxx.a
 
-.PHONY: release debug test clean
+.PHONY: release debug test format clean
 
 release: CFLAGS += -O3
 release: test program
@@ -27,14 +27,26 @@ debug: CFLAGS += -g -DDEBUG
 debug: PROGRAM := $(PROGRAM)_debug
 debug: program
 
+test: $(EVAL_LIB)
+	@echo "[PROJECT] Running eval tests before build..."
+	@$(MAKE) -C eval test
+
+clean:
+	@echo "[PROJECT] Cleaning..."
+	@rm -rf $(OUT_DIR)
+	@$(MAKE) -C eval clean
+	@# Uncomment if you want to clean replxx as well (slower rebuilds):
+	@# $(MAKE) -C $(REPLXX_BUILD) clean
+
+format:
+	@echo "[PROJECT] Formatting code..."
+	@clang-format -i */*.c */*.h
+	@echo "[PROJECT] ✅ Code formatted."
+
 program: $(OUT_DIR) $(SRC) $(LIBS)
 	@echo "[PROJECT] Building $(PROGRAM)..."
 	@$(CC) $(CFLAGS) $(SRC) $(LDLIBS) -o $(OUT_DIR)/$(PROGRAM) $(LDFLAGS)
 	@echo "[PROJECT] ✅ Build complete: $(OUT_DIR)/$(PROGRAM)"
-
-test: $(EVAL_LIB)
-	@echo "[PROJECT] Running eval tests before build..."
-	@$(MAKE) -C eval test
 
 $(EVAL_LIB):
 	@echo "[PROJECT] Building eval library..."
@@ -48,10 +60,3 @@ $(REPLXX_LIB):
 
 $(OUT_DIR):
 	@mkdir -p $(OUT_DIR)
-
-clean:
-	@echo "[PROJECT] Cleaning..."
-	@rm -rf $(OUT_DIR)
-	@$(MAKE) -C eval clean
-	@# Uncomment if you want to clean replxx as well (slower rebuilds):
-	@# $(MAKE) -C $(REPLXX_BUILD) clean

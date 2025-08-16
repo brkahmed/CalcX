@@ -1,6 +1,8 @@
 {
-  "cSpell.words": ["arccosh", "arcsinh", "arctan", "arctanh"],
+  "cSpell.words": ["arccosh", "arcsinh", "arctan", "arctanh", "Replxx"],
   "files.associations": {
-    "eval.h": "c"
+    "eval.h": "c",
+    "errno.h": "c",
+    "stdlib.h": "c"
   }
 }

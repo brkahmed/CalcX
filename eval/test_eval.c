@@ -1,8 +1,8 @@
 #define _GNU_SOURCE
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
 #include "eval.h"
 
@@ -21,7 +21,8 @@ void test_ok(const char *expr, double expected) {
             printf("✅ PASSED: %s = %.9f\n", expr, result);
             passed++;
         }
-    } EXCEPT() {
+    }
+    EXCEPT() {
         printf("❌ FAILED: %s\n    ↳ Threw an error\n", expr);
         failed++;
     }
@@ -32,7 +33,8 @@ void test_error(const char *expr) {
         double result = eval_expr(expr);
         printf("❌ FAILED: %s\n    ↳ Expected error but got %.9f\n", expr, result);
         failed++;
-    } EXCEPT() {
+    }
+    EXCEPT() {
         printf("✅ PASSED (error): %s\n", expr);
         passed++;
     }
@@ -117,9 +119,9 @@ int main(void) {
     test_error("unknown(5)");
 
     // Ans
-    test_ok("10", 10);          // ans = 10
-    test_ok("ans + 5", 15);     // ans = 15
-    test_ok("ans^2", 225);      // ans = 225
+    test_ok("10", 10);             // ans = 10
+    test_ok("ans + 5", 15);        // ans = 15
+    test_ok("ans^2", 225);         // ans = 225
     test_ok("ans + 4!", 225 + 24); // ans = 249
 
     printf("\n🎉 Summary: %d passed, %d failed\n", passed, failed);

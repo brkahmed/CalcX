@@ -1,39 +1,34 @@
-#define _GNU_SOURCE // required to use getline function
-
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "eval/eval.h"
+#include "replxx.h"
 
-int main(int argc, char const *argv[]) {
-    if (argc > 2) {
+int main(int arg, char const *argv[]) {
+    if (arg > 2) {
         ERROR("Usage %s [expression]", argv[0]);
         return -1;
     }
-    if (argc == 2) {
+    if (arg == 2) {
         TRY(eval_expr_err_handler)
-            printf("%f\n", eval_expr(argv[1]));
+        printf("%f\n", eval_expr(argv[1]));
         EXCEPT()
-            return -1;
+        return -1;
         return 0;
     }
 
-    char *buff = NULL;
-    size_t buff_size = 0;
-    ssize_t buff_len = 0;
-
+    Replxx *replxx = replxx_init();
     while (true) {
-        printf(">>> ");
-        buff_len = getline(&buff, &buff_size, stdin);
-        if (buff_len == -1)
-            break;
-        TRY(eval_expr_err_handler) {
-            printf("%f\n", eval_expr(buff));
-        }
+        const char *input = NULL;
+        do {
+            input = replxx_input(replxx, ">>> ");
+        } while (input == NULL && errno == EAGAIN);
+        if (input == NULL) break;
+
+        TRY(eval_expr_err_handler) printf("%f\n", eval_expr(input));
     }
     printf("\n");
-
-    free(buff);
     return 0;
 }

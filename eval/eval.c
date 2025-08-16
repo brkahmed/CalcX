@@ -2,17 +2,16 @@
 
 #include "eval.h"
 
-
+#include <ctype.h>
 #include <stdbool.h>
-#include <stdio.h> 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
-#include <math.h>
 #include "utility.c"
+#include <math.h>
 
-#define str(c) ((char[]) {c, '\0'}) // ? convert character to string
+#define str(c) ((char[]){c, '\0'}) // ? convert character to string
 
 error_handler eval_expr_err_handler;
 double last_result = 0;
@@ -39,14 +38,16 @@ static void eat_char(const char **curr, char c) {
     if (**curr == c)
         ++(*curr);
     else
-        RAISE(eval_expr_err_handler, SyntaxError, "Expected a '%c' character got '%s'", c, (**curr == '\0') ? "END OF EXPRESSION" : str(**curr));
+        RAISE(
+            eval_expr_err_handler, SyntaxError, "Expected a '%c' character got '%s'", c,
+            (**curr == '\0') ? "END OF EXPRESSION" : str(**curr)
+        );
 }
 
 double eval_expr(const char *expr) {
     recursion_depth = 0;
     double result = parse_expr(&expr);
-    if (*expr != '\0')
-        RAISE(eval_expr_err_handler, SyntaxError, "Unsupported character; '%c'", *expr);
+    if (*expr != '\0') RAISE(eval_expr_err_handler, SyntaxError, "Unsupported character; '%c'", *expr);
     last_result = result;
     return result;
 }
@@ -158,20 +159,22 @@ static double parse_number_or_function(const char **curr) {
         size_t args_count = parse_function_args(curr, args);
         return parse_function(identifier, args, args_count);
     }
-    RAISE(eval_expr_err_handler, SyntaxError, "Expected a number or identifier got '%s'", (**curr == '\0') ? "END OF EXPRESSION" : str(**curr));
+    RAISE(
+        eval_expr_err_handler, SyntaxError, "Expected a number or identifier got '%s'",
+        (**curr == '\0') ? "END OF EXPRESSION" : str(**curr)
+    );
 }
 
 static double parse_number(const char **curr) {
     char *end;
     double result = strtod(*curr, &end);
-    if (end == *curr)
-        RAISE(eval_expr_err_handler, SyntaxError, "Expected a number got '%c'", **curr);
+    if (end == *curr) RAISE(eval_expr_err_handler, SyntaxError, "Expected a number got '%c'", **curr);
     *curr = end;
     return result;
 }
 
-
-#define AddConst(_name, _value) if (strcmp(_name, name) == 0) return _value;
+#define AddConst(_name, _value)                                                                                        \
+    if (strcmp(_name, name) == 0) return _value;
 
 static double parse_const(const char *name) {
     AddConst("pi", M_PI);
@@ -185,13 +188,14 @@ static double parse_const(const char *name) {
 }
 #undef AddConst
 
-
-#define AddFunc(_name, _func, _count, ...) \
-    if (strcmp(_name, name) == 0) { \
-        if (args_count != _count) \
-            RAISE(eval_expr_err_handler, IncorrectArgumentCountError, \
-                _name " function expect %ld argument(s) but %ld was given ", (unsigned long) _count, args_count); \
-        return _func(__VA_ARGS__); \
+#define AddFunc(_name, _func, _count, ...)                                                                             \
+    if (strcmp(_name, name) == 0) {                                                                                    \
+        if (args_count != _count)                                                                                      \
+            RAISE(                                                                                                     \
+                eval_expr_err_handler, IncorrectArgumentCountError,                                                    \
+                _name " function expect %ld argument(s) but %ld was given ", (unsigned long)_count, args_count         \
+            );                                                                                                         \
+        return _func(__VA_ARGS__);                                                                                     \
     }
 #define AddOneArgFunc(_name, _func) AddFunc(_name, _func, 1, args[0])
 #define AddTwoArgFunc(_name, _func) AddFunc(_name, _func, 2, args[0], args[1])
@@ -201,23 +205,31 @@ static double parse_function(const char *name, double *args, size_t args_count) 
     AddOneArgFunc("sin", sin);
     AddOneArgFunc("cos", cos);
     AddOneArgFunc("tan", tan);
-    AddOneArgFunc("asin", asin); AddOneArgFunc("arcsin", asin);
-    AddOneArgFunc("acos", acos); AddOneArgFunc("arccos", acos);
-    AddOneArgFunc("atan", atan); AddOneArgFunc("arctan", atan);
-    AddTwoArgFunc("atan2", atan2); AddTwoArgFunc("arctan2", atan2);
+    AddOneArgFunc("asin", asin);
+    AddOneArgFunc("arcsin", asin);
+    AddOneArgFunc("acos", acos);
+    AddOneArgFunc("arccos", acos);
+    AddOneArgFunc("atan", atan);
+    AddOneArgFunc("arctan", atan);
+    AddTwoArgFunc("atan2", atan2);
+    AddTwoArgFunc("arctan2", atan2);
 
     // Hyperbolic
     AddOneArgFunc("sinh", sinh);
     AddOneArgFunc("cosh", cosh);
     AddOneArgFunc("tanh", tanh);
-    AddOneArgFunc("asinh", asinh); AddOneArgFunc("arcsinh", asinh);
-    AddOneArgFunc("acosh", acosh); AddOneArgFunc("arccosh", acosh);
-    AddOneArgFunc("atanh", atanh); AddOneArgFunc("arctanh", atanh);
+    AddOneArgFunc("asinh", asinh);
+    AddOneArgFunc("arcsinh", asinh);
+    AddOneArgFunc("acosh", acosh);
+    AddOneArgFunc("arccosh", acosh);
+    AddOneArgFunc("atanh", atanh);
+    AddOneArgFunc("arctanh", atanh);
 
     // Exp and log
     AddOneArgFunc("exp", exp);
     AddOneArgFunc("exp2", exp2);
-    AddOneArgFunc("ln", log); AddOneArgFunc("log", log);
+    AddOneArgFunc("ln", log);
+    AddOneArgFunc("log", log);
     AddOneArgFunc("log10", log10);
     AddOneArgFunc("log2", log2);
 
@@ -262,14 +274,20 @@ static size_t parse_function_args(const char **curr, double *args) {
     }
 
     ++(*curr);
-    if (**curr == ')') { ++(*curr); return 0; } // ? handle zero args function
+    if (**curr == ')') {
+        ++(*curr);
+        return 0;
+    } // ? handle zero args function
 
     size_t args_count = 0;
     while (args_count < MAX_FUNCTION_ARGS) {
         args[args_count] = parse_expr(curr);
         ++args_count;
         skip_space(curr);
-        if (**curr == ')') { ++(*curr); break; }
+        if (**curr == ')') {
+            ++(*curr);
+            break;
+        }
         eat_char(curr, ',');
     }
     if (args_count >= MAX_FUNCTION_ARGS)
@@ -279,7 +297,9 @@ static size_t parse_function_args(const char **curr, double *args) {
 
 static size_t parse_identifier(const char **curr, char *buffer) {
     if (!isalpha(**curr))
-        RAISE(eval_expr_err_handler, SyntaxError, "Identifier should start with  alphabetic character not '%c'", **curr);
+        RAISE(
+            eval_expr_err_handler, SyntaxError, "Identifier should start with  alphabetic character not '%c'", **curr
+        );
     const char *start = *curr;
     // ? the - 1 bcz we need to store '\0' at the end
     while (*curr - start < MAX_IDENTIFIER_LEN - 1 && isalnum(**curr)) ++(*curr);
@@ -288,7 +308,8 @@ static size_t parse_identifier(const char **curr, char *buffer) {
         RAISE(eval_expr_err_handler, MoreThanMaxError, "Too long Identifier, expected less than %lu characters", len);
     while (start < *curr) {
         *buffer = tolower(*start); // ! for now identifier are case-insensitive
-        ++buffer; ++start;
+        ++buffer;
+        ++start;
     }
     *buffer = '\0';
 

@@ -1,18 +1,16 @@
-#include <stdlib.h>
 #include <math.h>
+#include <stdlib.h>
 
 #define M_TAU 6.283185307179586
 #define M_PHI 1.618033988749895
 #define M_DEG 0.017453292519943295
-#define M_RAD  57.29577951308232
-
+#define M_RAD 57.29577951308232
 
 static double factorial(double x) {
     if (x == 0) return 1;
     if (x > 0 && trunc(x) == x) {
         double result = x--;
-        while (x > 1)
-            result *= x--;
+        while (x > 1) result *= x--;
         return result;
     }
     return tgamma(x + 1);
