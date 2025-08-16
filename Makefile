@@ -24,10 +24,10 @@ release: CFLAGS += -O3
 release: test program
 
 debug: CFLAGS += -g -DDEBUG
-debug: PROGRAM += _debug
+debug: PROGRAM := $(PROGRAM)_debug
 debug: program
 
-program: $(OUT_DIR) $(EVAL_LIB) $(REPLXX_LIB)
+program: $(OUT_DIR) $(SRC) $(LIBS)
 	@echo "[PROJECT] Building $(PROGRAM)..."
 	@$(CC) $(CFLAGS) $(SRC) $(LDLIBS) -o $(OUT_DIR)/$(PROGRAM) $(LDFLAGS)
 	@echo "[PROJECT] ✅ Build complete: $(OUT_DIR)/$(PROGRAM)"
@@ -53,5 +53,5 @@ clean:
 	@echo "[PROJECT] Cleaning..."
 	@rm -rf $(OUT_DIR)
 	@$(MAKE) -C eval clean
-	# Uncomment if you want to clean replxx as well (slower rebuilds):
-	# $(MAKE) -C $(REPLXX_BUILD) clean
+	@# Uncomment if you want to clean replxx as well (slower rebuilds):
+	@# $(MAKE) -C $(REPLXX_BUILD) clean
