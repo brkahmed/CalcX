@@ -2,14 +2,14 @@
 
 #include "eval.h"
 
+#include "utility.c"
+
 #include <ctype.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "utility.c"
-#include <math.h>
 
 #define str(c) ((char[]){c, '\0'}) // ? convert character to string
 
@@ -46,7 +46,7 @@ static void eat_char(const char **curr, char c) {
 
 double eval_expr(const char *expr) {
     recursion_depth = 0;
-    double result = parse_expr(&expr);
+    double result   = parse_expr(&expr);
     if (*expr != '\0') RAISE(eval_expr_err_handler, SyntaxError, "Unsupported character; '%c'", *expr);
     last_result = result;
     return result;

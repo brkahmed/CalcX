@@ -25,8 +25,8 @@ typedef jmp_buf error_handler;
     if (__##handler##_code == 0)
 
 #define GET_MACRO(_0, _1, name, ...) name
-#define EXCEPT(...) GET_MACRO(__VA_ARGS__, EXCEPT_ERROR, EXCEPT_ALL)(__VA_ARGS__)
-#define EXCEPT_ERROR(error_type) else if (__##handler##_code == error_type)
-#define EXCEPT_ALL() else
+#define EXCEPT(...)                  GET_MACRO(__VA_ARGS__, EXCEPT_ERROR, EXCEPT_ALL)(__VA_ARGS__)
+#define EXCEPT_ERROR(error_type)     else if (__##handler##_code == error_type)
+#define EXCEPT_ALL()                 else
 
-#endif
+#endif // ERROR_H

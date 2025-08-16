@@ -9,3 +9,5 @@ AlignAfterOpenBracket: BlockIndent
 AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: true
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveMacros: Consecutive

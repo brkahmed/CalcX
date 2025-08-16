@@ -8,14 +8,16 @@
 
 int main(int arg, char const *argv[]) {
     if (arg > 2) {
-        ERROR("Usage %s [expression]", argv[0]);
+        ERROR("Usage: %s [expression]", argv[0]);
         return -1;
     }
     if (arg == 2) {
+        // clang-format off
         TRY(eval_expr_err_handler)
-        printf("%f\n", eval_expr(argv[1]));
+            printf("%f\n", eval_expr(argv[1]));
         EXCEPT()
-        return -1;
+            return -1;
+        // clang-format on
         return 0;
     }
 

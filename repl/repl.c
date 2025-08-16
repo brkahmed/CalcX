@@ -2,7 +2,7 @@
 #include "error.h"
 #include "eval.h"
 
-#include <replxx.h>
+#include "replxx.h"
 
 #include <errno.h>
 #include <stdbool.h>
