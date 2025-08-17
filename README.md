@@ -4,6 +4,10 @@ This is a command-line calculator that evaluates complex math expressions. It su
 
 ---
 
+<img src="demo.gif" alt="demo">
+
+---
+
 ## 📦 How to Use
 
 ### Run from terminal:
@@ -38,17 +42,17 @@ $ ./calc "2 + 3 * (4 + sin(pi/2))"
 
 ### 🔹 Operators
 
-| Operator | Meaning               | Example                         |
-|----------|-----------------------|---------------------------------|
-| `+`      | Addition              | `2 + 3`, `+1`                   |
-| `-`      | Subtraction / Negate  | `5 - 2`, `-3`                   |
-| `*`      | Multiplication        | `2 * 4`                         |
-| `/`      | Division              | `8 / 2`                         |
-| `^`      | Exponentiation        | `2 ^ 3 = 8`                     |
-| `%`      | Modulo (remainder)    | `10 % 3 = 1`                    |
-| `!`      | Factorial             | `5! = 120`                      |
-| `!!`     | Chained factorial     | `5!! = factorial(factorial(5))` |
-| `\|x\|`  | Absolute value        | `\|-3\| = 3`                    |
+| Operator | Meaning              | Example                         |
+| -------- | -------------------- | ------------------------------- |
+| `+`      | Addition             | `2 + 3`, `+1`                   |
+| `-`      | Subtraction / Negate | `5 - 2`, `-3`                   |
+| `*`      | Multiplication       | `2 * 4`                         |
+| `/`      | Division             | `8 / 2`                         |
+| `^`      | Exponentiation       | `2 ^ 3 = 8`                     |
+| `%`      | Modulo (remainder)   | `10 % 3 = 1`                    |
+| `!`      | Factorial            | `5! = 120`                      |
+| `!!`     | Chained factorial    | `5!! = factorial(factorial(5))` |
+| `\|x\|`  | Absolute value       | `\|-3\| = 3`                    |
 
 ---
 
@@ -56,35 +60,34 @@ $ ./calc "2 + 3 * (4 + sin(pi/2))"
 
 You can omit `*` in common cases:
 
-| Expression     | Interpreted as    |
-|----------------|-------------------|
-| `2pi`          | `2 * pi`          |
-| `3(1 + 2)`     | `3 * (1 + 2)`     |
-| `2sin(pi/2)`   | `2 * sin(pi/2)`   |
+| Expression   | Interpreted as  |
+| ------------ | --------------- |
+| `2pi`        | `2 * pi`        |
+| `3(1 + 2)`   | `3 * (1 + 2)`   |
+| `2sin(pi/2)` | `2 * sin(pi/2)` |
 
 ---
 
 ## 🔣 Built-in Constants
 
-| Name    | Value                | Description                                                               |
-|---------|----------------------|---------------------------------------------------------------------------|
-| `pi`    | 3.141592653589793    | Ratio of a circle’s circumference to its diameter                         |
-| `e`     | 2.718281828459045    | Euler’s number (base of natural logarithm)                                |
-| `tau`   | 6.283185307179586    | Equal to `2 * pi`; represents a full turn in radians                      |
-| `phi`   | 1.618033988749895    | Golden ratio: `(1 + sqrt(5)) / 2`                                         |
-| `deg`   | 0.017453292519943295 | Radians per degree: `pi / 180` (use to convert degrees → radians)         |
-| `rad`   | 57.29577951308232    | Degrees per radian: `180 / pi` (use to convert radians → degrees)         |
-| `ans`   | (last result)        | Value of the previous expression result. Useful for chained calculations  |
-
+| Name  | Value                | Description                                                              |
+| ----- | -------------------- | ------------------------------------------------------------------------ |
+| `pi`  | 3.141592653589793    | Ratio of a circle’s circumference to its diameter                        |
+| `e`   | 2.718281828459045    | Euler’s number (base of natural logarithm)                               |
+| `tau` | 6.283185307179586    | Equal to `2 * pi`; represents a full turn in radians                     |
+| `phi` | 1.618033988749895    | Golden ratio: `(1 + sqrt(5)) / 2`                                        |
+| `deg` | 0.017453292519943295 | Radians per degree: `pi / 180` (use to convert degrees → radians)        |
+| `rad` | 57.29577951308232    | Degrees per radian: `180 / pi` (use to convert radians → degrees)        |
+| `ans` | (last result)        | Value of the previous expression result. Useful for chained calculations |
 
 ---
 
-## 📚 Built-in Functions 
+## 📚 Built-in Functions
 
 ### 🔸 Trigonometric Functions
 
 | Function(s)                    | Description                                   | Example                |
-|--------------------------------|-----------------------------------------------|------------------------|
+| ------------------------------ | --------------------------------------------- | ---------------------- |
 | `sin(x)`                       | Sine of angle `x` (in radians)                | `sin(pi / 2) = 1`      |
 | `cos(x)`                       | Cosine of angle `x` (in radians)              | `cos(0) = 1`           |
 | `tan(x)`                       | Tangent of angle `x` (in radians)             | `tan(pi / 4) = 1`      |
@@ -98,7 +101,7 @@ You can omit `*` in common cases:
 ### 🔸 Hyperbolic Functions
 
 | Function(s)              | Description                                          | Example        |
-|--------------------------|------------------------------------------------------|----------------|
+| ------------------------ | ---------------------------------------------------- | -------------- |
 | `sinh(x)`                | Hyperbolic sine                                      | `sinh(0) = 0`  |
 | `cosh(x)`                | Hyperbolic cosine                                    | `cosh(0) = 1`  |
 | `tanh(x)`                | Hyperbolic tangent                                   | `tanh(0) = 0`  |
@@ -111,7 +114,7 @@ You can omit `*` in common cases:
 ### 🔸 Exponential and Logarithmic Functions
 
 | Function(s)       | Description                          | Example              |
-|-------------------|--------------------------------------|----------------------|
+| ----------------- | ------------------------------------ | -------------------- |
 | `exp(x)`          | Euler's number raised to `x` (`e^x`) | `exp(1) = e ≈ 2.718` |
 | `exp2(x)`         | 2 raised to the power `x` (`2^x`)    | `exp2(3) = 8`        |
 | `log(x)`, `ln(x)` | Natural logarithm (base `e`)         | `ln(e) = 1`          |
@@ -123,7 +126,7 @@ You can omit `*` in common cases:
 ### 🔸 Rounding Functions
 
 | Function(s) | Description                                         | Example            |
-|-------------|-----------------------------------------------------|--------------------|
+| ----------- | --------------------------------------------------- | ------------------ |
 | `round(x)`  | Rounds `x` to the nearest integer                   | `round(2.5) = 2`   |
 | `floor(x)`  | Rounds `x` down to the nearest integer (toward −∞)  | `floor(2.9) = 2`   |
 | `ceil(x)`   | Rounds `x` up to the nearest integer (toward +∞)    | `ceil(2.1) = 3`    |
@@ -134,7 +137,7 @@ You can omit `*` in common cases:
 ### 🔸 Power and Root Functions
 
 | Function(s)   | Description                                            | Example           |
-|---------------|--------------------------------------------------------|-------------------|
+| ------------- | ------------------------------------------------------ | ----------------- |
 | `sqrt(x)`     | Square root                                            | `sqrt(9) = 3`     |
 | `cbrt(x)`     | Cube root                                              | `cbrt(8) = 2`     |
 | `pow(x, y)`   | `x` raised to the power of `y`                         | `pow(2, 3) = 8`   |
@@ -145,7 +148,7 @@ You can omit `*` in common cases:
 ### 🔸 General Math Functions
 
 | Function(s)         | Description                                                  | Example              |
-|---------------------|--------------------------------------------------------------|----------------------|
+| ------------------- | ------------------------------------------------------------ | -------------------- |
 | `abs(x)`            | Absolute value of `x`                                        | `abs(-3) = 3`        |
 | `mod(x, y)`         | Floating-point remainder of `x / y`                          | `mod(10.5, 3) = 1.5` |
 | `gamma(x)`          | Euler’s gamma function: `Γ(x)` (generalization of factorial) | `gamma(6) = 120`     |
@@ -154,7 +157,6 @@ You can omit `*` in common cases:
 | `max(a, b, ..., n)` | Maximum value among all arguments                            | `max(4, 1, 6) = 6`   |
 | `erf(x)`            | Error function (used in probability and statistics)          | `erf(0) = 0`         |
 | `erfc(x)`           | Complementary error function: `1 - erf(x)`                   | `erfc(0) = 1`        |
-
 
 ---
 
@@ -170,29 +172,14 @@ Your input may trigger descriptive errors like:
 
 ---
 
-## 🧪 Examples
-
-```text
->>> 5!
-120
->>> 2^3 + sqrt 9
-11
->>> sin(pi / 2)
-1
->>> factorial(5)
-120
->>> min(3, 5, -1)
--1
->>> 3!!
-720
-```
-
----
-
 ## 🧰 Build Instructions
 
 ```bash
-make release   # Builds release version to ./build/calc
-make debug     # Builds debug version with -g and debug logs
-make test      # Runs test suite
+mkdir build && cd build
+# build in debug mode
+cmake -DCMAKE_BUILD_TYPE=Debug .. && cmake --build .
+# build in release mode
+cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build .
+# run tests
+ctest --output-on-failure
 ```
