@@ -12,31 +12,31 @@ int failed = 0;
 int passed = 0;
 
 void test_ok(const char *expr, double expected) {
-    TRY(eval_expr_err_handler) {
-        double result = eval_expr(expr);
-        if (fabs(result - expected) > EPSILON) {
-            printf("❌ FAILED: %s\n    ↳ Expected: %.9f\n    ↳ Got:      %.9f\n", expr, expected, result);
-            failed++;
-        } else {
-            printf("✅ PASSED: %s = %.9f\n", expr, result);
-            passed++;
-        }
-    }
-    EXCEPT() {
+    double result = eval(expr);
+    if (isnan(result) && isnan(expected)) {
+        printf("✅ PASSED: %s = NaN\n", expr);
+        passed++;
+    } else if (isnan(result)) {
         printf("❌ FAILED: %s\n    ↳ Threw an error\n", expr);
         failed++;
+    } else if (fabs(result - expected) > EPSILON) {
+        printf("❌ FAILED: %s\n    ↳ Expected: %.9f\n    ↳ Got:      %.9f\n", expr, expected, result);
+        failed++;
+    } else {
+        printf("✅ PASSED: %s = %.9f\n", expr, result);
+        passed++;
     }
 }
 
 void test_error(const char *expr) {
-    TRY(eval_expr_err_handler) {
-        double result = eval_expr(expr);
-        printf("❌ FAILED: %s\n    ↳ Expected error but got %.9f\n", expr, result);
-        failed++;
-    }
-    EXCEPT() {
+    double result = eval(expr);
+    if (isnan(result)) {
         printf("✅ PASSED (error): %s\n", expr);
         passed++;
+        return;
+    } else {
+        printf("❌ FAILED: %s\n    ↳ Expected error but got %.9f\n", expr, result);
+        failed++;
     }
 }
 
@@ -94,6 +94,7 @@ int main(void) {
     test_ok("7 % 4", 3);
     test_ok("7 % 4 ^ 2", 7); // 7 % (4^2)
     test_ok("9 % 5!", 9);
+    test_ok("-5!", -120);
 
     // Implicit multiplication
     test_ok("2pi", 2 * M_PI);
@@ -102,7 +103,7 @@ int main(void) {
     test_ok("(5+6)(2+3)", 55);
     test_ok("(5+6)/2(2+3)", 55.0 / 2);
     test_ok("2/3pi", 2.0 / 3 * M_PI);
-    test_ok("2asin(sin(90deg)+tau)rad", 180);
+    test_ok("2asin(sin(90deg+tau))rad", 180);
 
     // Complex nested expressions
     test_ok("((2+3)*4)^2", pow(20, 2));

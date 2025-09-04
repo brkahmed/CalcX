@@ -1,317 +1,176 @@
-#define _GNU_SOURCE
-
 #include "eval.h"
-
-#include "utility.c"
 
 #include <ctype.h>
 #include <math.h>
+#include <setjmp.h>
+#include <stdarg.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#define str(c) ((char[]){c, '\0'}) // ? convert character to string
+#define _c_or_eof(c) (c == '\0' ? "end of input" : (char[]){c, '\0'})
+#define CHECK_RECURSION_DEPTH(e)                                                                                       \
+    do {                                                                                                               \
+        if (recursion_depth++ > MAX_RECURSION_DEPTH)                                                                   \
+            _error(MaxRecursionDepthError, "Maximum recursion depth of %d exceeded", MAX_RECURSION_DEPTH);             \
+        e;                                                                                                             \
+        recursion_depth--;                                                                                             \
+    } while (0)
 
-error_handler eval_expr_err_handler;
-double last_result = 0;
-static int recursion_depth;
+typedef const char **ptr;
 
-static double parse_expr(const char **curr);
-static double parse_term(const char **curr);
-static double parse_factor(const char **curr);
-static double parse_number_or_function(const char **curr);
-static double parse_number(const char **curr);
-static double parse_const(const char *name);
-static double parse_function(const char *name, double *args, size_t args_count);
-static size_t parse_function_args(const char **curr, double *args);
-static size_t parse_identifier(const char **curr, char *buffer);
-static double handle_factorial(const char **curr, double x);
-static double handle_expo(const char **curr, double x);
+char eval_error_msg[EVAL_ERROR_MSG_LEN];
+EvalErrorType eval_error_type = NoError;
+Number eval_last_result       = 0;
 
-static void skip_space(const char **curr) {
-    while (isspace(**curr)) ++(*curr);
+static jmp_buf eval_env;
+static size_t recursion_depth = 0;
+
+static Number expression(ptr expr);
+
+Number eval(const char *expr) {
+    eval_error_msg[0] = '\0';
+    eval_error_type   = NoError;
+    recursion_depth   = 0;
+    if (setjmp(eval_env) == 0) {
+        return eval_last_result = expression(&expr);
+    } else {
+        return NAN;
+    }
 }
 
-static void eat_char(const char **curr, char c) {
-    skip_space(curr);
+static __attribute__((noreturn)) void _error(EvalErrorType error_type, const char *fmt, ...) {
+    eval_error_type = error_type;
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(eval_error_msg, EVAL_ERROR_MSG_LEN * sizeof(char), fmt, args);
+    va_end(args);
+    longjmp(eval_env, error_type);
+}
+
+static inline void skipspace(ptr curr) {
+    while (isspace(**curr)) (*curr)++;
+}
+
+static void eatchar(ptr curr, char c) {
+    skipspace(curr);
     if (**curr == c)
-        ++(*curr);
+        (*curr)++;
     else
-        RAISE(
-            eval_expr_err_handler, SyntaxError, "Expected a '%c' character got '%s'", c,
-            (**curr == '\0') ? "END OF EXPRESSION" : str(**curr)
-        );
+        _error(SyntaxError, "Expected '%c', got '%s'", c, _c_or_eof(**curr));
 }
 
-double eval_expr(const char *expr) {
-    recursion_depth = 0;
-    double result   = parse_expr(&expr);
-    if (*expr != '\0') RAISE(eval_expr_err_handler, SyntaxError, "Unsupported character; '%c'", *expr);
-    last_result = result;
-    return result;
-}
-
-static double parse_expr(const char **curr) {
-    if (recursion_depth++ > MAX_RECURSION_DEPTH)
-        RAISE(eval_expr_err_handler, MaxRecursionDepthError, "Maximum recursion depth reached");
-    double result = parse_term(curr);
-    while (true) {
-        skip_space(curr);
-        if (**curr == '+') {
-            ++(*curr);
-            result += parse_term(curr);
-        } else if (**curr == '-') {
-            ++(*curr);
-            result -= parse_term(curr);
-        } else
-            break;
+static Number primary(ptr curr) {
+    skipspace(curr);
+    if (isdigit(**curr) || (**curr == '.' && isdigit(*(*curr + 1)))) {
+        char *end;
+        Number result = strtold(*curr, &end);
+        *curr         = end;
+        return result;
     }
-    recursion_depth--;
-    return result;
+    if (**curr == '(') {
+        (*curr)++;
+        Number result = expression(curr);
+        eatchar(curr, ')');
+        return result;
+    }
+    if (**curr == '|') {
+        (*curr)++;
+        Number result = expression(curr);
+        eatchar(curr, '|');
+        return result < 0 ? -result : result;
+    }
+    // ! TODO
+    // ! add variable and function handling
+    _error(SyntaxError, "Expected a number or parenthesized expression, got '%s'", _c_or_eof(**curr));
 }
 
-static double parse_term(const char **curr) {
-    skip_space(curr);
-    double result = parse_factor(curr);
-    double tmp;
-    while (true) {
-        skip_space(curr);
-        if (**curr == '*') {
-            ++(*curr);
-            result *= parse_factor(curr);
-        } else if (**curr == '(') {
-            result *= parse_factor(curr);
-        } else if (isalpha(**curr)) {
-            result *= parse_number_or_function(curr);
-        } else if (**curr == '/') {
-            ++(*curr);
-            tmp = parse_factor(curr);
-            if (tmp == 0) RAISE(eval_expr_err_handler, DivisionByZeroError, "Division by zero");
-            result /= tmp;
-        } else if (**curr == '%') {
-            ++(*curr);
-            result = fmod(result, parse_factor(curr));
-        } else
-            break;
+static Number factorial(ptr curr) {
+    Number result = primary(curr);
+    skipspace(curr);
+    while (**curr == '!') {
+        result = tgammal(result + 1);
+        (*curr)++;
+        skipspace(curr);
     }
     return result;
 }
 
-static double parse_factor(const char **curr) {
-    skip_space(curr);
-    double result;
+static Number exponent(ptr curr) {
+    Number result = factorial(curr);
+    skipspace(curr);
+    if (**curr == '^') {
+        (*curr)++;
+        CHECK_RECURSION_DEPTH(result = powl(result, exponent(curr)));
+    }
+    return result;
+}
+
+static Number unary(ptr curr) {
+    skipspace(curr);
     bool is_negative = false;
     while (**curr == '+' || **curr == '-') {
         if (**curr == '-') is_negative = !is_negative;
-        ++(*curr);
-        skip_space(curr);
+        (*curr)++;
+        skipspace(curr);
     }
-    if (**curr == '(') {
-        ++(*curr);
-        result = parse_expr(curr);
-        eat_char(curr, ')');
-    } else if (**curr == '|') {
-        ++(*curr);
-        result = fabs(parse_expr(curr));
-        eat_char(curr, '|');
-    } else {
-        result = parse_number_or_function(curr);
-    }
-    // ? set the sign
-    if (is_negative) result = -result;
-    // ? code here handle the result from a expression like (2+3) or number like 5
-    skip_space(curr);
-    result = handle_factorial(curr, result); // ? return the same number if there is no '!'
-    result = handle_expo(curr, result);
-    return result;
+    Number result = exponent(curr);
+    return is_negative ? -result : result;
 }
 
-static double handle_expo(const char **curr, double x) {
-    while (**curr == '^') {
-        ++(*curr);
-        x = pow(x, parse_factor(curr));
-    }
-    return x;
-}
-
-static double handle_factorial(const char **curr, double x) {
-    while (**curr == '!') {
-        ++(*curr);
-        x = factorial(x);
-        skip_space(curr);
-    }
-    return x;
-}
-
-static double parse_number_or_function(const char **curr) {
-    if (isdigit(**curr) || **curr == '.')
-        return parse_number(curr);
-    else if (isalpha(**curr)) {
-        char identifier[MAX_IDENTIFIER_LEN];
-        parse_identifier(curr, identifier);
-
-        double result = parse_const(identifier);
-        if (!isnan(result)) return result;
-
-        skip_space(curr);
-        double args[MAX_FUNCTION_ARGS];
-        size_t args_count = parse_function_args(curr, args);
-        return parse_function(identifier, args, args_count);
-    }
-    RAISE(
-        eval_expr_err_handler, SyntaxError, "Expected a number or identifier got '%s'",
-        (**curr == '\0') ? "END OF EXPRESSION" : str(**curr)
-    );
-}
-
-static double parse_number(const char **curr) {
-    char *end;
-    double result = strtod(*curr, &end);
-    if (end == *curr) RAISE(eval_expr_err_handler, SyntaxError, "Expected a number got '%c'", **curr);
-    *curr = end;
-    return result;
-}
-
-#define AddConst(_name, _value)                                                                                        \
-    if (strcmp(_name, name) == 0) return _value;
-
-static double parse_const(const char *name) {
-    AddConst("pi", M_PI);
-    AddConst("e", M_E);
-    AddConst("tau", M_TAU);
-    AddConst("phi", M_PHI);
-    AddConst("deg", M_DEG);
-    AddConst("rad", M_RAD);
-    AddConst("ans", last_result);
-    return NAN;
-}
-#undef AddConst
-
-#define AddFunc(_name, _func, _count, ...)                                                                             \
-    if (strcmp(_name, name) == 0) {                                                                                    \
-        if (args_count != _count)                                                                                      \
-            RAISE(                                                                                                     \
-                eval_expr_err_handler, IncorrectArgumentCountError,                                                    \
-                _name " function expect %ld argument(s) but %ld was given ", (unsigned long)_count, args_count         \
-            );                                                                                                         \
-        return _func(__VA_ARGS__);                                                                                     \
-    }
-#define AddOneArgFunc(_name, _func) AddFunc(_name, _func, 1, args[0])
-#define AddTwoArgFunc(_name, _func) AddFunc(_name, _func, 2, args[0], args[1])
-
-static double parse_function(const char *name, double *args, size_t args_count) {
-    // Trigonometric
-    AddOneArgFunc("sin", sin);
-    AddOneArgFunc("cos", cos);
-    AddOneArgFunc("tan", tan);
-    AddOneArgFunc("asin", asin);
-    AddOneArgFunc("arcsin", asin);
-    AddOneArgFunc("acos", acos);
-    AddOneArgFunc("arccos", acos);
-    AddOneArgFunc("atan", atan);
-    AddOneArgFunc("arctan", atan);
-    AddTwoArgFunc("atan2", atan2);
-    AddTwoArgFunc("arctan2", atan2);
-
-    // Hyperbolic
-    AddOneArgFunc("sinh", sinh);
-    AddOneArgFunc("cosh", cosh);
-    AddOneArgFunc("tanh", tanh);
-    AddOneArgFunc("asinh", asinh);
-    AddOneArgFunc("arcsinh", asinh);
-    AddOneArgFunc("acosh", acosh);
-    AddOneArgFunc("arccosh", acosh);
-    AddOneArgFunc("atanh", atanh);
-    AddOneArgFunc("arctanh", atanh);
-
-    // Exp and log
-    AddOneArgFunc("exp", exp);
-    AddOneArgFunc("exp2", exp2);
-    AddOneArgFunc("ln", log);
-    AddOneArgFunc("log", log);
-    AddOneArgFunc("log10", log10);
-    AddOneArgFunc("log2", log2);
-
-    // Rounding
-    AddOneArgFunc("ceil", ceil);
-    AddOneArgFunc("floor", floor);
-    AddOneArgFunc("trunc", trunc);
-    AddOneArgFunc("round", round);
-    AddOneArgFunc("rint", rint);
-
-    // Power and root
-    AddOneArgFunc("sqrt", sqrt);
-    AddOneArgFunc("cbrt", cbrt);
-    AddTwoArgFunc("pow", pow);
-    AddTwoArgFunc("hypot", hypot);
-
-    // Other
-    AddOneArgFunc("abs", fabs);
-    AddTwoArgFunc("mod", fmod);
-
-    AddFunc("factorial", factorial, 1, args[0]);
-    AddOneArgFunc("gamma", tgamma);
-    AddOneArgFunc("erf", erf);
-    AddOneArgFunc("erfc", erfc);
-
-    AddFunc("min", min, args_count, args, args_count);
-    AddFunc("max", max, args_count, args, args_count);
-
-    RAISE(eval_expr_err_handler, UnsupportedFunctionError, "Unsupported function '%s'", name);
-}
-
-#undef AddFunc
-#undef AddOneArgFunc
-#undef AddTwoArgFunc
-
-static size_t parse_function_args(const char **curr, double *args) {
-    skip_space(curr);
-
-    if (**curr != '(') { // ? Handle calling function like sin 0 is equivelent to sin(0)
-        args[0] = parse_factor(curr);
-        return 1;
-    }
-
-    ++(*curr);
-    if (**curr == ')') {
-        ++(*curr);
-        return 0;
-    } // ? handle zero args function
-
-    size_t args_count = 0;
-    while (args_count < MAX_FUNCTION_ARGS) {
-        args[args_count] = parse_expr(curr);
-        ++args_count;
-        skip_space(curr);
-        if (**curr == ')') {
-            ++(*curr);
-            break;
+static Number factor(ptr curr) {
+    Number result = unary(curr);
+    Number denom;
+    while (true) {
+        skipspace(curr);
+        switch (**curr) {
+            case '*':
+                (*curr)++;
+                result *= unary(curr);
+                break;
+            case '/':
+                (*curr)++;
+                if ((denom = unary(curr)) == 0.0)
+                    _error(DivisionByZeroError, "Division by zero (%Lf / %Lf)", result, denom);
+                result /= denom;
+                break;
+            case '%':
+                (*curr)++;
+                if ((denom = unary(curr)) == 0.0)
+                    _error(ModuloByZeroError, "Modulo by zero (%Lf %% %Lf)", result, denom);
+                result = fmodl(result, denom);
+                break;
+            case '(': result *= primary(curr); break;
+            default:
+                if (isalpha(**curr))
+                    result *= primary(curr);
+                else
+                    return result;
         }
-        eat_char(curr, ',');
     }
-    if (args_count >= MAX_FUNCTION_ARGS)
-        RAISE(eval_expr_err_handler, MoreThanMaxError, "Too many args, max supported args is %ld", MAX_FUNCTION_ARGS);
-    return args_count;
 }
 
-static size_t parse_identifier(const char **curr, char *buffer) {
-    if (!isalpha(**curr))
-        RAISE(
-            eval_expr_err_handler, SyntaxError, "Identifier should start with  alphabetic character not '%c'", **curr
-        );
-    const char *start = *curr;
-    // ? the - 1 bcz we need to store '\0' at the end
-    while (*curr - start < MAX_IDENTIFIER_LEN - 1 && isalnum(**curr)) ++(*curr);
-    size_t len = *curr - start;
-    if (len >= MAX_IDENTIFIER_LEN - 1)
-        RAISE(eval_expr_err_handler, MoreThanMaxError, "Too long Identifier, expected less than %lu characters", len);
-    while (start < *curr) {
-        *buffer = tolower(*start); // ! for now identifier are case-insensitive
-        ++buffer;
-        ++start;
+static Number term(ptr curr) {
+    Number result = factor(curr);
+    while (true) {
+        skipspace(curr);
+        switch (**curr) {
+            case '+':
+                (*curr)++;
+                result += factor(curr);
+                break;
+            case '-':
+                (*curr)++;
+                result -= factor(curr);
+                break;
+            default: return result;
+        }
     }
-    *buffer = '\0';
+}
 
-    return len;
+static Number expression(ptr curr) {
+    Number result;
+    CHECK_RECURSION_DEPTH(result = term(curr));
+    return result;
 }

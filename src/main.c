@@ -1,5 +1,4 @@
-#include <errno.h>
-#include <stdbool.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -8,20 +7,18 @@
 
 int main(int arg, char const *argv[]) {
     if (arg > 2) {
-        ERROR("Usage: %s [expression]", argv[0]);
+        fprintf(stderr, "Usage: %s [expression]", argv[0]);
         return -1;
     }
     if (arg == 2) {
-        // clang-format off
-        TRY(eval_expr_err_handler)
-            printf("%f\n", eval_expr(argv[1]));
-        EXCEPT()
+        Number result = eval(argv[1]);
+        if (isnan(result)) {
+            fprintf(stderr, "Error: %s\n", eval_error_msg);
             return -1;
-        // clang-format on
-        return 0;
-    }
-
-    repl();
+        }
+        printf("%Lf\n", result);
+    } else
+        repl();
 
     return 0;
 }

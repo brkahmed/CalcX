@@ -1,11 +1,11 @@
 #include "repl.h"
 
-#include "error.h"
-#include "eval.h"
-#include "replxx.h"
-
 #include <errno.h>
+#include <math.h>
 #include <stdbool.h>
+
+#include <eval.h>
+#include <replxx.h>
 
 #include "utility.c"
 
@@ -25,9 +25,12 @@ void repl(void) {
 
         replxx_history_add(replxx, input);
 
-        TRY(eval_expr_err_handler)
-        replxx_print(replxx, "ans: %lf\n", eval_expr(input));
+        Number result = eval(input);
+        if (isnan(result))
+            replxx_print(replxx, "Error: %s\n", eval_error_msg);
+        else
+            replxx_print(replxx, "ans: %Lf\n", result);
     }
-    printf("\n");
+    replxx_print(replxx, "\n");
     replxx_end(replxx);
 }

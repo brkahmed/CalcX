@@ -1,23 +1,28 @@
 #ifndef EVAL_H
 #define EVAL_H
 
-#include "error.h"
+#include <stddef.h>
 
-#define MAX_IDENTIFIER_LEN  (ssize_t)64
-#define MAX_FUNCTION_ARGS   (ssize_t)1024
+#define EVAL_ERROR_MSG_LEN  512
+#define MAX_FUNCTION_ARGS   1024
+#define MAX_IDENTIFIER_LEN  64
 #define MAX_RECURSION_DEPTH 1024
 
-double eval_expr(const char *expr);
+typedef long double Number;
+typedef Number (*Function)(Number[], size_t);
 
-extern error_handler eval_expr_err_handler;
+Number eval(const char *expr);
 
-enum ErrorType {
-    SyntaxError = 1,
+typedef enum {
+    NoError,
     DivisionByZeroError,
-    MoreThanMaxError,
-    UnsupportedFunctionError,
-    IncorrectArgumentCountError,
-    MaxRecursionDepthError
-};
+    ModuloByZeroError,
+    MaxRecursionDepthError,
+    SyntaxError,
+} EvalErrorType;
+
+extern char eval_error_msg[EVAL_ERROR_MSG_LEN];
+extern EvalErrorType eval_error_type;
+extern Number eval_last_result;
 
 #endif
