@@ -3,6 +3,7 @@
   "files.associations": {
     "eval.h": "c",
     "errno.h": "c",
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "error.h": "c"
   }
 }
