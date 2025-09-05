@@ -10,6 +10,7 @@
   ],
   "files.associations": {
     "stdbool.h": "c",
-    "float.h": "c"
+    "float.h": "c",
+    "quadmath.h": "c"
   }
 }

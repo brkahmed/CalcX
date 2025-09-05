@@ -1,10 +1,6 @@
 #include "eval.h"
 
-#define __USE_GNU
-
 #include <ctype.h>
-#include <float.h>
-#include <math.h>
 #include <setjmp.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -12,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <quadmath.h>
 
 #include "functions.h"
 #include "table.h"
@@ -54,21 +52,23 @@ void eval_ctx_init(EvalContext *ctx) {
     table_init(&ctx->table);
 
     /* Constants */
-    table_set_number(&ctx->table, "pi", M_PIl);
-    table_set_number(&ctx->table, "e", M_El);
+    table_set_number(&ctx->table, "pi", E_PI);
+    table_set_number(&ctx->table, "e", E_E);
+    table_set_number(&ctx->table, "tau", E_TAU);
 
     table_set_function(&ctx->table, "max", (Function)max, 0, MAX_FUNCTION_ARGS);
     table_set_function(&ctx->table, "min", (Function)min, 0, MAX_FUNCTION_ARGS);
-    table_set_cfunction(&ctx->table, "abs", (void *)fabsl, 1);
+    table_set_cfunction(&ctx->table, "abs", (void *)fabsq, 1);
+    table_set_cfunction(&ctx->table, "acos", (void *)acosq, 1);
 }
 
 char *eval_stringify(char *buff, size_t len, Number num) {
-    static char default_buff[128];
+    static char default_buff[EVAL_STRINGIFY_BUFFSIZE];
     if (!buff) {
         buff = default_buff;
-        len  = 128;
+        len  = EVAL_STRINGIFY_BUFFSIZE;
     }
-    len       = snprintf(buff, len * sizeof(char), "%.*Lf", LDBL_DIG, num);
+    len       = quadmath_snprintf(buff, len * sizeof(char), "%.*Qf", FLT128_DIG, num);
     char *dot = strchr(buff, '.');
     if (dot) {
         char *end = buff + len - 1;
@@ -101,7 +101,7 @@ static void eatchar(EvalContext *ctx, char c) {
 
 static Number number(EvalContext *ctx) {
     char *end;
-    Number result = strtold(ctx->curr, &end);
+    Number result = strtoflt128(ctx->curr, &end);
     ctx->curr     = end;
     return result;
 }
@@ -117,7 +117,7 @@ static Number absolute(EvalContext *ctx) {
     ctx->curr++; // eat the absolute value pipe '|'
     Number result = expression(ctx);
     eatchar(ctx, '|');
-    return fabsl(result);
+    return fabsq(result);
 }
 
 static TableEntry *identifier(EvalContext *ctx) {
@@ -177,7 +177,7 @@ static Number function_call(EvalContext *ctx, TableEntry *entry) {
             case 3: result = ((Number (*)(Number, Number, Number))entry->cfunc)(args[0], args[1], args[2]); break;
             default: _error(ctx, ImplementationError, "C function '%s' supports up to 3 arguments", entry->name);
         }
-    if (isnanl(result)) _error(ctx, FunctionArgumentRangeError, "Function '%s' got argument out of range", entry->name);
+    if (isnanq(result)) _error(ctx, FunctionArgumentRangeError, "Function '%s' got argument out of range", entry->name);
     return result;
 }
 
@@ -198,7 +198,7 @@ static Number factorial(EvalContext *ctx) {
     Number result = primary(ctx);
     skipspace(ctx);
     while (*ctx->curr == '!') {
-        result = tgammal(result + 1);
+        result = tgammaq(result + 1);
         ctx->curr++;
         skipspace(ctx);
     }
@@ -210,7 +210,7 @@ static Number exponent(EvalContext *ctx) {
     skipspace(ctx);
     if (*ctx->curr == '^') {
         ctx->curr++;
-        CHECK_RECURSION_DEPTH(ctx, result = powl(result, exponent(ctx)));
+        CHECK_RECURSION_DEPTH(ctx, result = powq(result, exponent(ctx)));
     }
     return result;
 }
@@ -230,6 +230,7 @@ static Number unary(EvalContext *ctx) {
 static Number factor(EvalContext *ctx) {
     Number result = unary(ctx);
     Number denom;
+    char errorbuff[EVAL_STRINGIFY_BUFFSIZE];
     while (true) {
         skipspace(ctx);
         switch (*ctx->curr) {
@@ -239,15 +240,21 @@ static Number factor(EvalContext *ctx) {
                 break;
             case '/':
                 ctx->curr++;
-                if ((denom = unary(ctx)) == 0.0L)
-                    _error(ctx, DivisionByZeroError, "Division by zero (%Lf / %Lf)", result, denom);
+                if ((denom = unary(ctx)) == 0.0Q)
+                    _error(
+                        ctx, DivisionByZeroError, "Division by zero (%s / %s)",
+                        eval_stringify(errorbuff, EVAL_STRINGIFY_BUFFSIZE, result), eval_stringify(NULL, 0, denom)
+                    );
                 result /= denom;
                 break;
             case '%':
                 ctx->curr++;
-                if ((denom = unary(ctx)) == 0.0L)
-                    _error(ctx, ModuloByZeroError, "Modulo by zero (%Lf %% %Lf)", result, denom);
-                result = fmodl(result, denom);
+                if ((denom = unary(ctx)) == 0.0Q)
+                    _error(
+                        ctx, ModuloByZeroError, "Modulo by zero (%s %% %s)",
+                        eval_stringify(errorbuff, EVAL_STRINGIFY_BUFFSIZE, result), eval_stringify(NULL, 0, denom)
+                    );
+                result = fmodq(result, denom);
                 break;
             default:
                 if (isalpha(*ctx->curr) || *ctx->curr == '_' || *ctx->curr == '(') // Implicit multiplication

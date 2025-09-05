@@ -1,10 +1,12 @@
 #define _GNU_SOURCE
 
-#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
+#include <quadmath.h>
+
 #include "eval.h"
+#include "functions.h"
 
 #define EPSILON 1e-9
 
@@ -12,31 +14,31 @@ static int failed = 0;
 static int passed = 0;
 static EvalContext ctx;
 
-void test_ok(const char *expr, double expected) {
-    double result = eval(&ctx, expr);
-    if (isnan(result) && isnan(expected)) {
-        printf("✅ PASSED: %s = NaN\n", expr);
-        passed++;
-    } else if (isnan(result)) {
+void test_ok(const char *expr, Number expected) {
+    Number result = eval(&ctx, expr);
+    if (ctx.error_type) {
         printf("❌ FAILED: %s\n    ↳ Threw an error \"%s\"\n", expr, ctx.error_msg);
         failed++;
-    } else if (fabs(result - expected) > EPSILON) {
-        printf("❌ FAILED: %s\n    ↳ Expected: %.9f\n    ↳ Got:      %.9f\n", expr, expected, result);
+    } else if (fabsq(result - expected) > EPSILON) {
+        printf(
+            "❌ FAILED: %s\n    ↳ Expected: %s\n    ↳ Got:      %s\n", expr, eval_stringify(NULL, 0, expected),
+            eval_stringify(NULL, 0, result)
+        );
         failed++;
     } else {
-        printf("✅ PASSED: %s = %.9f\n", expr, result);
+        printf("✅ PASSED: %s = %s\n", expr, eval_stringify(NULL, 0, result));
         passed++;
     }
 }
 
 void test_error(const char *expr) {
-    double result = eval(&ctx, expr);
-    if (isnan(result)) {
+    Number result = eval(&ctx, expr);
+    if (ctx.error_type) {
         printf("✅ PASSED (error): %s\n", expr);
         passed++;
         return;
     } else {
-        printf("❌ FAILED: %s\n    ↳ Expected error but got %.9f\n", expr, result);
+        printf("❌ FAILED: %s\n    ↳ Expected error but got %s\n", expr, eval_stringify(NULL, 0, result));
         failed++;
     }
 }
@@ -61,12 +63,12 @@ int main(void) {
     test_ok("(((((((5)))))))", 5);
 
     // Constants
-    test_ok("pi", M_PI);
-    test_ok("e", M_E);
-    test_ok("tau", 2 * M_PI);
+    test_ok("pi", E_PI);
+    test_ok("e", E_E);
+    test_ok("tau", E_TAU);
     test_ok("phi", 1.618033988749895);
     test_ok("90deg", 90 * 0.017453292519943295);
-    test_ok("pi rad", M_PI * 57.29577951308232);
+    test_ok("pi rad", E_PI * 57.29577951308232);
 
     // Functions
     test_ok("sin(90deg)", 1);
@@ -79,7 +81,7 @@ int main(void) {
     test_ok("min(5,2,8)", 2);
     test_ok("max(5,2,8)", 8);
     test_ok("factorial(4)", 24);
-    test_ok("gamma(5)", tgamma(5));
+    test_ok("gamma(5)", tgammaq(5));
     test_ok("mod(9,4)", 1);
     test_ok("cos 0", 1);
 
@@ -93,26 +95,26 @@ int main(void) {
     test_ok("3!!", 720);
     test_ok("4!*2", 48);
     test_ok("3*4!*2", 48 * 3);
-    test_ok("pi!", tgamma(M_PI + 1));
+    test_ok("pi!", tgammaq(E_PI + 1));
     test_ok("7 % 4", 3);
     test_ok("7 % 4 ^ 2", 7); // 7 % (4^2)
     test_ok("9 % 5!", 9);
     test_ok("-5!", -120);
 
     // Implicit multiplication
-    test_ok("2pi", 2 * M_PI);
+    test_ok("2pi", 2 * E_PI);
     test_ok("2(3+4)", 14);
     test_ok("2cos(0)", 2);
     test_ok("(5+6)(2+3)", 55);
     test_ok("(5+6)/2(2+3)", 55.0 / 2);
-    test_ok("2/3pi", 2.0 / 3 * M_PI);
+    test_ok("2/3pi", 2.0 / 3 * E_PI);
     test_ok("2asin(sin(90deg+tau))rad", 180);
 
     // Complex nested expressions
-    test_ok("((2+3)*4)^2", pow(20, 2));
+    test_ok("((2+3)*4)^2", powq(20, 2));
     test_ok("min(3, max(2,1+1), sqrt(16))", 2);
     test_ok("abs(-5 + min(3,2)^2)", 1);
-    test_ok("((2+3)!)^2", pow(120, 2));
+    test_ok("((2+3)!)^2", powq(120, 2));
     test_ok("2(3 + 4(5 + 6))", 94); // 2*(3+4*11) = 2*(3+44) = 94
     test_ok("abs(round(-4.6)) + max(2,3,4)", 9);
 

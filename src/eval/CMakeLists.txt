@@ -7,5 +7,5 @@ target_include_directories(eval
 
 target_link_libraries(eval
     PRIVATE
-        m
+        quadmath
 )
