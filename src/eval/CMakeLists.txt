@@ -1,4 +1,4 @@
-add_library(eval eval.c)
+add_library(eval eval.c functions.c table.c)
 
 target_include_directories(eval
     PUBLIC

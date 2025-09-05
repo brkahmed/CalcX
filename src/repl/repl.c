@@ -1,7 +1,6 @@
 #include "repl.h"
 
 #include <errno.h>
-#include <math.h>
 #include <stdbool.h>
 
 #include <eval.h>
@@ -26,7 +25,7 @@ void repl(void) {
         replxx_history_add(replxx, input);
 
         Number result = eval(input);
-        if (isnan(result))
+        if (eval_error_type)
             replxx_print(replxx, "Error: %s\n", eval_error_msg);
         else
             replxx_print(replxx, "ans: %Lf\n", result);

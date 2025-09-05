@@ -17,6 +17,10 @@ typedef enum {
     NoError,
     DivisionByZeroError,
     ModuloByZeroError,
+    UndefinedVariableError,
+    FunctionArgumentCountError,
+    FunctionArgumentRangeError,
+    ImplementationError,
     MaxRecursionDepthError,
     SyntaxError,
 } EvalErrorType;

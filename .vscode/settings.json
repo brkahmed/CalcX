@@ -1,3 +1,11 @@
 {
-  "cSpell.words": ["arccosh", "arcsinh", "arctan", "arctanh", "Replxx"]
+  "cSpell.words": [
+    "arccosh",
+    "arcsinh",
+    "arctan",
+    "arctanh",
+    "inited",
+    "Replxx",
+    "xrealloc"
+  ]
 }
