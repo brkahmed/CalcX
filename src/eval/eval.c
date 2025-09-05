@@ -1,6 +1,9 @@
 #include "eval.h"
 
+#define __USE_GNU
+
 #include <ctype.h>
+#include <float.h>
 #include <math.h>
 #include <setjmp.h>
 #include <stdarg.h>
@@ -35,6 +38,7 @@ Number eval(EvalContext *ctx, const char *expr) {
             snprintf(ctx->error_msg, EVAL_ERROR_MSG_LEN * sizeof(char), "Unexpected character '%c'", *ctx->curr);
             return NAN;
         }
+        table_set_number(&ctx->table, "ans", ctx->last_result);
         return ctx->last_result;
     } else {
         return NAN;
@@ -44,14 +48,34 @@ Number eval(EvalContext *ctx, const char *expr) {
 void eval_ctx_init(EvalContext *ctx) {
     ctx->error_msg[0]    = '\0';
     ctx->error_type      = NoError;
-    ctx->last_result     = 0;
+    ctx->last_result     = NAN;
     ctx->curr            = NULL;
     ctx->recursion_depth = 0;
     table_init(&ctx->table);
-    table_set_const(&ctx->table, "pi", M_PI);
+
+    /* Constants */
+    table_set_number(&ctx->table, "pi", M_PIl);
+    table_set_number(&ctx->table, "e", M_El);
+
     table_set_function(&ctx->table, "max", (Function)max, 0, MAX_FUNCTION_ARGS);
     table_set_function(&ctx->table, "min", (Function)min, 0, MAX_FUNCTION_ARGS);
     table_set_cfunction(&ctx->table, "abs", (void *)fabsl, 1);
+}
+
+char *eval_stringify(char *buff, size_t len, Number num) {
+    static char default_buff[128];
+    if (!buff) {
+        buff = default_buff;
+        len  = 128;
+    }
+    len       = snprintf(buff, len * sizeof(char), "%.*Lf", LDBL_DIG, num);
+    char *dot = strchr(buff, '.');
+    if (dot) {
+        char *end = buff + len - 1;
+        while (end > dot && *end == '0') *(end--) = '\0';
+        if (end == dot) *end = '\0';
+    }
+    return buff;
 }
 
 static __attribute__((noreturn)) void _error(EvalContext *ctx, EvalErrorType error_type, const char *fmt, ...) {
@@ -164,8 +188,7 @@ static Number primary(EvalContext *ctx) {
     if (*ctx->curr == '|') return absolute(ctx);
     if (isalpha(*ctx->curr) || *ctx->curr == '_') {
         TableEntry *entry = identifier(ctx);
-        if (entry->type == ENTRY_TYPE_CONST) return entry->constnum;
-        if (entry->type == ENTRY_TYPE_NUMBER) return *(entry->num);
+        if (entry->type == ENTRY_TYPE_NUMBER) return entry->num;
         if (entry->type == ENTRY_TYPE_FUNCTION || entry->type == ENTRY_TYPE_CFUNCTION) return function_call(ctx, entry);
     }
     _error(ctx, SyntaxError, "Expected a number or parenthesized expression, got '%s'", _c_or_eof(*ctx->curr));

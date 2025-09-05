@@ -17,7 +17,7 @@ int main(int arg, char const *argv[]) {
             fprintf(stderr, "Error: %s\n", ctx.error_msg);
             return -1;
         }
-        printf("%Lf\n", result);
+        printf("%s\n", eval_stringify(NULL, 0, result));
     } else
         repl();
 

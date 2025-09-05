@@ -38,5 +38,6 @@ typedef struct {
 
 Number eval(EvalContext *ctx, const char *expr);
 void eval_ctx_init(EvalContext *ctx);
+char *eval_stringify(char *buff, size_t len, Number num);
 
 #endif

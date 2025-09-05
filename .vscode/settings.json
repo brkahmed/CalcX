@@ -9,6 +9,7 @@
     "xrealloc"
   ],
   "files.associations": {
-    "stdbool.h": "c"
+    "stdbool.h": "c",
+    "float.h": "c"
   }
 }

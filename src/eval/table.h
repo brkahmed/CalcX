@@ -7,7 +7,6 @@
 
 typedef enum {
     ENTRY_TYPE_NUMBER,
-    ENTRY_TYPE_CONST,
     ENTRY_TYPE_FUNCTION,
     ENTRY_TYPE_CFUNCTION,
 } EntryType;
@@ -16,8 +15,7 @@ typedef struct {
     const char *name;
     EntryType type;
     union {
-        Number *num;
-        Number constnum;
+        Number num;
         struct {
             union {
                 Function func;
@@ -37,10 +35,9 @@ typedef struct {
 } Table;
 
 void table_init(Table *table);
-TableEntry *table_set_number(Table *table, const char *name, Number *value);
-TableEntry *table_set_function(Table *table, const char *name, Function func, size_t min_args, size_t max_args);
-TableEntry *table_set_cfunction(Table *table, const char *name, void *func, size_t arg_count);
-TableEntry *table_set_const(Table *table, const char *name, Number value);
 TableEntry *table_lookup(Table *table, const char *name);
+TableEntry *table_set_cfunction(Table *table, const char *name, void *func, size_t arg_count);
+TableEntry *table_set_function(Table *table, const char *name, Function func, size_t min_args, size_t max_args);
+TableEntry *table_set_number(Table *table, const char *name, Number value);
 
 #endif // EVAL_TABLE_H

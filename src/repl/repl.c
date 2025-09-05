@@ -31,7 +31,7 @@ void repl(void) {
         if (ctx.error_type)
             replxx_print(replxx, "Error: %s\n", ctx.error_msg);
         else
-            replxx_print(replxx, "ans: %Lf\n", result);
+            replxx_print(replxx, "ans: %s\n", eval_stringify(NULL, 0, result));
     }
     replxx_print(replxx, "\n");
     replxx_end(replxx);
