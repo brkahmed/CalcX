@@ -78,6 +78,8 @@ You can omit `*` in common cases:
 | `phi` | 1.618033988749895    | Golden ratio: `(1 + sqrt(5)) / 2`                                        |
 | `deg` | 0.017453292519943295 | Radians per degree: `pi / 180` (use to convert degrees → radians)        |
 | `rad` | 57.29577951308232    | Degrees per radian: `180 / pi` (use to convert radians → degrees)        |
+| `c`   | 299792458.0          | Speed of light in `m/s`                                                  |
+| `na`  | 6.02214076e23        | Avogadro number in `1/mol`                                               |
 | `ans` | (last result)        | Value of the previous expression result. Useful for chained calculations |
 
 ---
@@ -120,6 +122,7 @@ You can omit `*` in common cases:
 | `log(x)`, `ln(x)` | Natural logarithm (base `e`)         | `ln(e) = 1`          |
 | `log10(x)`        | Logarithm base 10                    | `log10(1000) = 3`    |
 | `log2(x)`         | Logarithm base 2                     | `log2(8) = 3`        |
+| `logb(b, x)`      | Logarithm base b                     | `logb(e, e ^ 3) = 3` |
 
 ---
 
@@ -147,16 +150,25 @@ You can omit `*` in common cases:
 
 ### 🔸 General Math Functions
 
-| Function(s)         | Description                                                  | Example              |
-| ------------------- | ------------------------------------------------------------ | -------------------- |
-| `abs(x)`            | Absolute value of `x`                                        | `abs(-3) = 3`        |
-| `mod(x, y)`         | Floating-point remainder of `x / y`                          | `mod(10.5, 3) = 1.5` |
-| `gamma(x)`          | Euler’s gamma function: `Γ(x)` (generalization of factorial) | `gamma(6) = 120`     |
-| `factorial(x)`      | Computes `x!`                                                | `factorial(5) = 120` |
-| `min(a, b, ..., n)` | Minimum value among all arguments                            | `min(4, 1, 6) = 1`   |
-| `max(a, b, ..., n)` | Maximum value among all arguments                            | `max(4, 1, 6) = 6`   |
-| `erf(x)`            | Error function (used in probability and statistics)          | `erf(0) = 0`         |
-| `erfc(x)`           | Complementary error function: `1 - erf(x)`                   | `erfc(0) = 1`        |
+| Function(s)         | Description                                                          | Example                    |
+| ------------------- | -------------------------------------------------------------------- | -------------------------- |
+| `abs(x)`            | Absolute value of `x`                                                | `abs(-3) = 3`              |
+| `mod(x, y)`         | Floating-point remainder of `x / y`                                  | `mod(8.6, 3) = 2.6`        |
+| `remainder(x, y)`   | Remainder closest to zero (ties round to even)                       | `remainder(8.6, 3) = -0.4` |
+| `fma(x, y, z)`      | Same as `x * y + z` but with less rounding error                     | `fma(5, 6, -1) = 29`       |
+| `max(a, b, ..., n)` | Maximum value among all arguments                                    | `max(4, 1, 6) = 6`         |
+| `min(a, b, ..., n)` | Minimum value among all arguments                                    | `min(4, 1, 6) = 1`         |
+| `factorial(x)`      | Computes `x!`                                                        | `factorial(5) = 120`       |
+| `gamma(x)`          | Euler’s gamma function: `Γ(x)` (generalization of factorial)         | `gamma(6) = 120`           |
+| `lgamma(x)`         | Natural logarithm of the absolute value of the gamma function `Γ(x)` | `lgamma(5) = 3.178`        |
+| `erf(x)`            | Error function (used in probability and statistics)                  | `erf(0) = 0`               |
+| `erfc(x)`           | Complementary error function: `1 - erf(x)`                           | `erfc(0) = 1`              |
+| `j0`                | Bessel function of the first kind, order 0 → `J0(x)`                 | `j0(0) = 1`                |
+| `j1`                | Bessel function of the first kind, order 1 → `J1(x)`                 | `j1(0) = 0`                |
+| `jn`                | Bessel function of the first kind, order n → `Jn(x)`                 | `jn(2, 5) = 0.046`         |
+| `y0`                | Bessel function of the second kind, order 0 → `Y0(x)`                | `y0(.5) = -0.444`          |
+| `y1`                | Bessel function of the second kind, order 1 → `Y1(x)`                | `y1(3) = 0.324`            |
+| `yn`                | Bessel function of the second kind, order n → `Yn(x)`                | `yn(5, 1) = -260.405`      |
 
 ---
 
@@ -164,22 +176,29 @@ You can omit `*` in common cases:
 
 Your input may trigger descriptive errors like:
 
-- `Syntax error: unexpected ')'`
-- `Division by zero`
-- `Unsupported function 'cot'`
-- `Expected number, got ','`
-- `Too many arguments Function 'pow' expected 2 arguments, got 1`
+- `Expected ')', got 'end of input'`
+- `Division by zero (5 / 0)`
+- `Undefined variable 'cot'`
+- `Expected a number or parenthesized expression, got ','`
+- `Function 'pow' expects at least 2 arguments, got 1`
 
 ---
 
 ## 🧰 Build Instructions
 
 ```bash
+# clone the repo
+git clone --recursive https://github.com/brkahmed/CalcX.git && cd CalcX
+
 mkdir build && cd build
+
 # build in debug mode
-cmake -DCMAKE_BUILD_TYPE=Debug .. && cmake --build .
+cmake -DCMAKE_BUILD_TYPE=Debug ..
 # build in release mode
-cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build .
+cmake -DCMAKE_BUILD_TYPE=Release ..
+
+cmake --build .
+
 # run tests
 ctest --output-on-failure
 ```
