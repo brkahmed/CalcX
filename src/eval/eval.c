@@ -55,11 +55,75 @@ void eval_ctx_init(EvalContext *ctx) {
     table_set_number(&ctx->table, "pi", E_PI);
     table_set_number(&ctx->table, "e", E_E);
     table_set_number(&ctx->table, "tau", E_TAU);
+    table_set_number(&ctx->table, "phi", E_PHI);
+    table_set_number(&ctx->table, "deg", E_DEG);
+    table_set_number(&ctx->table, "rad", E_RAD);
+    table_set_number(&ctx->table, "c", E_C);
+    table_set_number(&ctx->table, "na", E_NA);
 
-    table_set_function(&ctx->table, "max", (Function)max, 0, MAX_FUNCTION_ARGS);
-    table_set_function(&ctx->table, "min", (Function)min, 0, MAX_FUNCTION_ARGS);
-    table_set_cfunction(&ctx->table, "abs", (void *)fabsq, 1);
+    /* Trigonometric */
+    table_set_cfunction(&ctx->table, "sin", (void *)sinq, 1);
+    table_set_cfunction(&ctx->table, "cos", (void *)cosq, 1);
+    table_set_cfunction(&ctx->table, "tan", (void *)tanq, 1);
+    table_set_cfunction(&ctx->table, "asin", (void *)asinq, 1);
+    table_set_cfunction(&ctx->table, "arcsin", (void *)asinq, 1);
     table_set_cfunction(&ctx->table, "acos", (void *)acosq, 1);
+    table_set_cfunction(&ctx->table, "arccos", (void *)acosq, 1);
+    table_set_cfunction(&ctx->table, "atan", (void *)atanq, 1);
+    table_set_cfunction(&ctx->table, "arctan", (void *)atanq, 1);
+    table_set_cfunction(&ctx->table, "atan2", (void *)atan2q, 2);
+    table_set_cfunction(&ctx->table, "arctan2", (void *)atan2q, 2);
+
+    /* Hyperbolic */
+    table_set_cfunction(&ctx->table, "sinh", (void *)sinhq, 1);
+    table_set_cfunction(&ctx->table, "cosh", (void *)coshq, 1);
+    table_set_cfunction(&ctx->table, "tanh", (void *)tanhq, 1);
+    table_set_cfunction(&ctx->table, "asinh", (void *)asinhq, 1);
+    table_set_cfunction(&ctx->table, "arcsinh", (void *)asinhq, 1);
+    table_set_cfunction(&ctx->table, "acosh", (void *)acoshq, 1);
+    table_set_cfunction(&ctx->table, "arccosh", (void *)acoshq, 1);
+    table_set_cfunction(&ctx->table, "atanh", (void *)atanhq, 1);
+    table_set_cfunction(&ctx->table, "arctanh", (void *)atanhq, 1);
+
+    /* Exponential and Logarithmic */
+    table_set_cfunction(&ctx->table, "exp", (void *)expq, 1);
+    table_set_cfunction(&ctx->table, "exp2", (void *)exp2q, 1);
+    table_set_cfunction(&ctx->table, "ln", (void *)logq, 1);
+    table_set_cfunction(&ctx->table, "log", (void *)logq, 1);
+    table_set_cfunction(&ctx->table, "log10", (void *)log10q, 1);
+    table_set_cfunction(&ctx->table, "log2", (void *)log2q, 1);
+    table_set_cfunction(&ctx->table, "logb", (void *)e_logb, 2);
+
+    /* Rounding */
+    table_set_cfunction(&ctx->table, "round", (void *)roundq, 1);
+    table_set_cfunction(&ctx->table, "floor", (void *)floorq, 1);
+    table_set_cfunction(&ctx->table, "ceil", (void *)ceilq, 1);
+    table_set_cfunction(&ctx->table, "trunc", (void *)truncq, 1);
+
+    /* Power and Root */
+    table_set_cfunction(&ctx->table, "sqrt", (void *)sqrtq, 1);
+    table_set_cfunction(&ctx->table, "cbrt", (void *)cbrtq, 1);
+    table_set_cfunction(&ctx->table, "pow", (void *)powq, 2);
+    table_set_cfunction(&ctx->table, "hypot", (void *)hypotq, 2);
+
+    /* General */
+    table_set_cfunction(&ctx->table, "abs", (void *)fabsq, 1);
+    table_set_cfunction(&ctx->table, "mod", (void *)fmodq, 2);
+    table_set_cfunction(&ctx->table, "remainder", (void *)remainderq, 2);
+    table_set_cfunction(&ctx->table, "fma", (void *)fmaq, 3);
+    table_set_function(&ctx->table, "max", (Function)e_max, 0, MAX_FUNCTION_ARGS);
+    table_set_function(&ctx->table, "min", (Function)e_min, 0, MAX_FUNCTION_ARGS);
+    table_set_cfunction(&ctx->table, "factorial", (void *)e_factorial, 1);
+    table_set_cfunction(&ctx->table, "gamma", (void *)tgammaq, 1);
+    table_set_cfunction(&ctx->table, "lgamma", (void *)lgammaq, 1);
+    table_set_cfunction(&ctx->table, "erf", (void *)erfq, 1);
+    table_set_cfunction(&ctx->table, "erfc", (void *)erfcq, 1);
+    table_set_cfunction(&ctx->table, "j0", (void *)j0q, 1);
+    table_set_cfunction(&ctx->table, "j1", (void *)j1q, 1);
+    table_set_cfunction(&ctx->table, "jn", (void *)e_jn, 2);
+    table_set_cfunction(&ctx->table, "y0", (void *)y0q, 1);
+    table_set_cfunction(&ctx->table, "y1", (void *)y1q, 1);
+    table_set_cfunction(&ctx->table, "yn", (void *)e_yn, 2);
 }
 
 char *eval_stringify(char *buff, size_t len, Number num) {
@@ -145,7 +209,7 @@ static Number function_call(EvalContext *ctx, TableEntry *entry) {
                 if (arg_count >= entry->max_args)
                     _error(
                         ctx, FunctionArgumentCountError, "Function '%s' expects at most %zu arguments, got %zu",
-                        entry->name, entry->max_args, arg_count
+                        entry->name, entry->max_args, arg_count + 1
                     );
                 args[arg_count++] = expression(ctx);
                 skipspace(ctx);
@@ -198,7 +262,7 @@ static Number factorial(EvalContext *ctx) {
     Number result = primary(ctx);
     skipspace(ctx);
     while (*ctx->curr == '!') {
-        result = tgammaq(result + 1);
+        result = e_factorial(result);
         ctx->curr++;
         skipspace(ctx);
     }
