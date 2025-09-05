@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#include "eval.h"
+#include "types.h"
 
 typedef enum {
     ENTRY_TYPE_NUMBER,

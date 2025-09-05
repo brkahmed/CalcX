@@ -10,9 +10,11 @@ int main(int arg, char const *argv[]) {
         return -1;
     }
     if (arg == 2) {
-        Number result = eval(argv[1]);
-        if (eval_error_type) {
-            fprintf(stderr, "Error: %s\n", eval_error_msg);
+        EvalContext ctx;
+        eval_ctx_init(&ctx);
+        Number result = eval(&ctx, argv[1]);
+        if (ctx.error_type) {
+            fprintf(stderr, "Error: %s\n", ctx.error_msg);
             return -1;
         }
         printf("%Lf\n", result);

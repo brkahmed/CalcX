@@ -14,141 +14,132 @@
 #include "table.h"
 
 #define _c_or_eof(c) (c == '\0' ? "end of input" : (char[]){c, '\0'})
-#define CHECK_RECURSION_DEPTH(e)                                                                                       \
+#define CHECK_RECURSION_DEPTH(ctx, e)                                                                                  \
     do {                                                                                                               \
-        if (recursion_depth++ >= MAX_RECURSION_DEPTH)                                                                  \
-            _error(MaxRecursionDepthError, "Maximum recursion depth of %d exceeded", MAX_RECURSION_DEPTH);             \
+        if (ctx->recursion_depth++ >= MAX_RECURSION_DEPTH)                                                             \
+            _error(ctx, MaxRecursionDepthError, "Maximum recursion depth of %d exceeded", MAX_RECURSION_DEPTH);        \
         e;                                                                                                             \
-        recursion_depth--;                                                                                             \
+        ctx->recursion_depth--;                                                                                        \
     } while (0)
 
-typedef const char **ptr;
+static Number expression(EvalContext *ctx);
 
-char eval_error_msg[EVAL_ERROR_MSG_LEN];
-EvalErrorType eval_error_type = NoError;
-Number eval_last_result       = 0;
-Table eval_table;
-bool eval_inited = false;
-
-static jmp_buf eval_env;
-static size_t recursion_depth = 0;
-
-static Number expression(ptr expr);
-void eval_init(void);
-
-Number eval(const char *expr) {
-    if (!eval_inited) eval_init();
-    eval_error_msg[0] = '\0';
-    eval_error_type   = NoError;
-    recursion_depth   = 0;
-    if (setjmp(eval_env) == 0) {
-        eval_last_result = expression(&expr);
-        if (*expr != '\0') {
-            eval_error_type = SyntaxError;
-            snprintf(eval_error_msg, EVAL_ERROR_MSG_LEN * sizeof(char), "Unexpected character '%c'", *expr);
+Number eval(EvalContext *ctx, const char *expr) {
+    ctx->curr         = expr;
+    ctx->error_msg[0] = '\0';
+    ctx->error_type   = NoError;
+    if (setjmp(ctx->env) == 0) {
+        ctx->last_result = expression(ctx);
+        if (*ctx->curr != '\0') {
+            ctx->error_type = SyntaxError;
+            snprintf(ctx->error_msg, EVAL_ERROR_MSG_LEN * sizeof(char), "Unexpected character '%c'", *ctx->curr);
             return NAN;
         }
-        return eval_last_result;
+        return ctx->last_result;
     } else {
         return NAN;
     }
 }
 
-void eval_init(void) {
-    table_init(&eval_table);
-    table_set_const(&eval_table, "pi", M_PI);
-    table_set_function(&eval_table, "max", max, 0, MAX_FUNCTION_ARGS);
-    table_set_function(&eval_table, "min", min, 0, MAX_FUNCTION_ARGS);
-    table_set_cfunction(&eval_table, "abs", fabsl, 1);
-    eval_inited = true;
+void eval_ctx_init(EvalContext *ctx) {
+    ctx->error_msg[0]    = '\0';
+    ctx->error_type      = NoError;
+    ctx->last_result     = 0;
+    ctx->curr            = NULL;
+    ctx->recursion_depth = 0;
+    table_init(&ctx->table);
+    table_set_const(&ctx->table, "pi", M_PI);
+    table_set_function(&ctx->table, "max", (Function)max, 0, MAX_FUNCTION_ARGS);
+    table_set_function(&ctx->table, "min", (Function)min, 0, MAX_FUNCTION_ARGS);
+    table_set_cfunction(&ctx->table, "abs", (void *)fabsl, 1);
 }
 
-static __attribute__((noreturn)) void _error(EvalErrorType error_type, const char *fmt, ...) {
-    eval_error_type = error_type;
+static __attribute__((noreturn)) void _error(EvalContext *ctx, EvalErrorType error_type, const char *fmt, ...) {
+    ctx->error_type = error_type;
     va_list args;
     va_start(args, fmt);
-    vsnprintf(eval_error_msg, EVAL_ERROR_MSG_LEN * sizeof(char), fmt, args);
+    vsnprintf(ctx->error_msg, EVAL_ERROR_MSG_LEN * sizeof(char), fmt, args);
     va_end(args);
-    longjmp(eval_env, error_type);
+    longjmp(ctx->env, (int)error_type);
 }
 
-static inline void skipspace(ptr curr) {
-    while (isspace(**curr)) (*curr)++;
+static inline void skipspace(EvalContext *ctx) {
+    while (isspace(*ctx->curr)) ctx->curr++;
 }
 
-static void eatchar(ptr curr, char c) {
-    skipspace(curr);
-    if (**curr == c)
-        (*curr)++;
+static void eatchar(EvalContext *ctx, char c) {
+    skipspace(ctx);
+    if (*ctx->curr == c)
+        ctx->curr++;
     else
-        _error(SyntaxError, "Expected '%c', got '%s'", c, _c_or_eof(**curr));
+        _error(ctx, SyntaxError, "Expected '%c', got '%s'", c, _c_or_eof(*ctx->curr));
 }
 
-static Number number(ptr curr) {
+static Number number(EvalContext *ctx) {
     char *end;
-    Number result = strtold(*curr, &end);
-    *curr         = end;
+    Number result = strtold(ctx->curr, &end);
+    ctx->curr     = end;
     return result;
 }
 
-static Number grouping(ptr curr) {
-    (*curr)++;
-    Number result = expression(curr);
-    eatchar(curr, ')');
+static Number grouping(EvalContext *ctx) {
+    ctx->curr++; // eat the parenthesize '('
+    Number result = expression(ctx);
+    eatchar(ctx, ')');
     return result;
 }
 
-static Number absolute(ptr curr) {
-    (*curr)++;
-    Number result = expression(curr);
-    eatchar(curr, '|');
+static Number absolute(EvalContext *ctx) {
+    ctx->curr++; // eat the absolute value pipe '|'
+    Number result = expression(ctx);
+    eatchar(ctx, '|');
     return fabsl(result);
 }
 
-static TableEntry *identifier(ptr curr) {
-    const char *start = *curr;
-    while (isalnum(**curr) || **curr == '_') (*curr)++;
-    size_t len = *curr - start;
+static TableEntry *identifier(EvalContext *ctx) {
+    const char *start = ctx->curr;
+    while (isalnum(*ctx->curr) || *ctx->curr == '_') ctx->curr++;
+    size_t len = ctx->curr - start;
     char name[len + 1];
     memcpy(name, start, len);
     name[len]         = '\0';
-    TableEntry *entry = table_lookup(&eval_table, name);
+    TableEntry *entry = table_lookup(&ctx->table, name);
     if (entry) return entry;
-    _error(UndefinedVariableError, "Undefined variable '%s'", name);
+    _error(ctx, UndefinedVariableError, "Undefined variable '%s'", name);
 }
 
-static Number function_call(ptr curr, TableEntry *entry) {
+static Number function_call(EvalContext *ctx, TableEntry *entry) {
     Function func = entry->func;
     Number args[entry->max_args];
     size_t arg_count = 0;
-    skipspace(curr);
-    if (**curr == '(') {
-        (*curr)++;
-        skipspace(curr);
-        if (**curr != ')') {
+    skipspace(ctx);
+    if (*ctx->curr == '(') {
+        ctx->curr++;
+        skipspace(ctx);
+        if (*ctx->curr != ')') {
             while (true) {
                 if (arg_count >= entry->max_args)
                     _error(
-                        FunctionArgumentCountError, "Function '%s' expects at most %zu arguments, got %zu", entry->name,
-                        entry->max_args, arg_count
+                        ctx, FunctionArgumentCountError, "Function '%s' expects at most %zu arguments, got %zu",
+                        entry->name, entry->max_args, arg_count
                     );
-                args[arg_count++] = expression(curr);
-                skipspace(curr);
-                if (**curr == ')') break;
-                eatchar(curr, ',');
+                args[arg_count++] = expression(ctx);
+                skipspace(ctx);
+                if (*ctx->curr == ')') break;
+                eatchar(ctx, ',');
             }
         }
-        eatchar(curr, ')');
+        eatchar(ctx, ')');
     } else
-        args[arg_count++] = expression(curr);
+        args[arg_count++] = expression(ctx);
     if (arg_count > entry->max_args)
         _error(
-            FunctionArgumentCountError, "Function '%s' expects at most %zu arguments, got %zu", entry->name,
+            ctx, FunctionArgumentCountError, "Function '%s' expects at most %zu arguments, got %zu", entry->name,
             entry->max_args, arg_count
         );
     if (arg_count < entry->min_args)
         _error(
-            FunctionArgumentCountError, "Function '%s' expects at least %zu arguments, got %zu", entry->name,
+            ctx, FunctionArgumentCountError, "Function '%s' expects at least %zu arguments, got %zu", entry->name,
             entry->min_args, arg_count
         );
     Number result;
@@ -160,111 +151,110 @@ static Number function_call(ptr curr, TableEntry *entry) {
             case 1: result = ((Number (*)(Number))entry->cfunc)(args[0]); break;
             case 2: result = ((Number (*)(Number, Number))entry->cfunc)(args[0], args[1]); break;
             case 3: result = ((Number (*)(Number, Number, Number))entry->cfunc)(args[0], args[1], args[2]); break;
-            default: _error(ImplementationError, "C function '%s' supports up to 3 arguments", entry->name);
+            default: _error(ctx, ImplementationError, "C function '%s' supports up to 3 arguments", entry->name);
         }
-    if (isnanl(result)) _error(FunctionArgumentRangeError, "Function '%s' got argument out of range");
+    if (isnanl(result)) _error(ctx, FunctionArgumentRangeError, "Function '%s' got argument out of range", entry->name);
     return result;
 }
 
-static Number primary(ptr curr) {
-    skipspace(curr);
-    if (isdigit(**curr) || (**curr == '.' && isdigit(*(*curr + 1)))) return number(curr);
-    if (**curr == '(') return grouping(curr);
-    if (**curr == '|') return absolute(curr);
-    if (isalpha(**curr) || **curr == '_') {
-        TableEntry *entry = identifier(curr);
+static Number primary(EvalContext *ctx) {
+    skipspace(ctx);
+    if (isdigit(*ctx->curr) || (*ctx->curr == '.' && isdigit(*(ctx->curr + 1)))) return number(ctx);
+    if (*ctx->curr == '(') return grouping(ctx);
+    if (*ctx->curr == '|') return absolute(ctx);
+    if (isalpha(*ctx->curr) || *ctx->curr == '_') {
+        TableEntry *entry = identifier(ctx);
         if (entry->type == ENTRY_TYPE_CONST) return entry->constnum;
         if (entry->type == ENTRY_TYPE_NUMBER) return *(entry->num);
-        if (entry->type == ENTRY_TYPE_FUNCTION || entry->type == ENTRY_TYPE_CFUNCTION)
-            return function_call(curr, entry);
+        if (entry->type == ENTRY_TYPE_FUNCTION || entry->type == ENTRY_TYPE_CFUNCTION) return function_call(ctx, entry);
     }
-    _error(SyntaxError, "Expected a number or parenthesized expression, got '%s'", _c_or_eof(**curr));
+    _error(ctx, SyntaxError, "Expected a number or parenthesized expression, got '%s'", _c_or_eof(*ctx->curr));
 }
 
-static Number factorial(ptr curr) {
-    Number result = primary(curr);
-    skipspace(curr);
-    while (**curr == '!') {
+static Number factorial(EvalContext *ctx) {
+    Number result = primary(ctx);
+    skipspace(ctx);
+    while (*ctx->curr == '!') {
         result = tgammal(result + 1);
-        (*curr)++;
-        skipspace(curr);
+        ctx->curr++;
+        skipspace(ctx);
     }
     return result;
 }
 
-static Number exponent(ptr curr) {
-    Number result = factorial(curr);
-    skipspace(curr);
-    if (**curr == '^') {
-        (*curr)++;
-        CHECK_RECURSION_DEPTH(result = powl(result, exponent(curr)));
+static Number exponent(EvalContext *ctx) {
+    Number result = factorial(ctx);
+    skipspace(ctx);
+    if (*ctx->curr == '^') {
+        ctx->curr++;
+        CHECK_RECURSION_DEPTH(ctx, result = powl(result, exponent(ctx)));
     }
     return result;
 }
 
-static Number unary(ptr curr) {
-    skipspace(curr);
+static Number unary(EvalContext *ctx) {
+    skipspace(ctx);
     bool is_negative = false;
-    while (**curr == '+' || **curr == '-') {
-        if (**curr == '-') is_negative = !is_negative;
-        (*curr)++;
-        skipspace(curr);
+    while (*ctx->curr == '+' || *ctx->curr == '-') {
+        if (*ctx->curr == '-') is_negative = !is_negative;
+        ctx->curr++;
+        skipspace(ctx);
     }
-    Number result = exponent(curr);
+    Number result = exponent(ctx);
     return is_negative ? -result : result;
 }
 
-static Number factor(ptr curr) {
-    Number result = unary(curr);
+static Number factor(EvalContext *ctx) {
+    Number result = unary(ctx);
     Number denom;
     while (true) {
-        skipspace(curr);
-        switch (**curr) {
+        skipspace(ctx);
+        switch (*ctx->curr) {
             case '*':
-                (*curr)++;
-                result *= unary(curr);
+                ctx->curr++;
+                result *= unary(ctx);
                 break;
             case '/':
-                (*curr)++;
-                if ((denom = unary(curr)) == 0.0)
-                    _error(DivisionByZeroError, "Division by zero (%Lf / %Lf)", result, denom);
+                ctx->curr++;
+                if ((denom = unary(ctx)) == 0.0L)
+                    _error(ctx, DivisionByZeroError, "Division by zero (%Lf / %Lf)", result, denom);
                 result /= denom;
                 break;
             case '%':
-                (*curr)++;
-                if ((denom = unary(curr)) == 0.0)
-                    _error(ModuloByZeroError, "Modulo by zero (%Lf %% %Lf)", result, denom);
+                ctx->curr++;
+                if ((denom = unary(ctx)) == 0.0L)
+                    _error(ctx, ModuloByZeroError, "Modulo by zero (%Lf %% %Lf)", result, denom);
                 result = fmodl(result, denom);
                 break;
             default:
-                if (isalpha(**curr) || **curr == '_' || **curr == '(')
-                    result *= primary(curr);
+                if (isalpha(*ctx->curr) || *ctx->curr == '_' || *ctx->curr == '(') // Implicit multiplication
+                    result *= primary(ctx);
                 else
                     return result;
         }
     }
 }
 
-static Number term(ptr curr) {
-    Number result = factor(curr);
+static Number term(EvalContext *ctx) {
+    Number result = factor(ctx);
     while (true) {
-        skipspace(curr);
-        switch (**curr) {
+        skipspace(ctx);
+        switch (*ctx->curr) {
             case '+':
-                (*curr)++;
-                result += factor(curr);
+                ctx->curr++;
+                result += factor(ctx);
                 break;
             case '-':
-                (*curr)++;
-                result -= factor(curr);
+                ctx->curr++;
+                result -= factor(ctx);
                 break;
             default: return result;
         }
     }
 }
 
-static Number expression(ptr curr) {
+static Number expression(EvalContext *ctx) {
     Number result;
-    CHECK_RECURSION_DEPTH(result = term(curr));
+    CHECK_RECURSION_DEPTH(ctx, result = term(ctx));
     return result;
 }

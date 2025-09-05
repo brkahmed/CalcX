@@ -15,6 +15,9 @@ void repl(void) {
     replxx_set_highlighter_callback(replxx, highlight, replxx);
     // replxx_bind_key(replxx, '(', close_parenthesis, replxx);
 
+    EvalContext ctx;
+    eval_ctx_init(&ctx);
+
     while (true) {
         const char *input = NULL;
         do {
@@ -24,9 +27,9 @@ void repl(void) {
 
         replxx_history_add(replxx, input);
 
-        Number result = eval(input);
-        if (eval_error_type)
-            replxx_print(replxx, "Error: %s\n", eval_error_msg);
+        Number result = eval(&ctx, input);
+        if (ctx.error_type)
+            replxx_print(replxx, "Error: %s\n", ctx.error_msg);
         else
             replxx_print(replxx, "ans: %Lf\n", result);
     }

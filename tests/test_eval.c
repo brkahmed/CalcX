@@ -8,16 +8,17 @@
 
 #define EPSILON 1e-9
 
-int failed = 0;
-int passed = 0;
+static int failed = 0;
+static int passed = 0;
+static EvalContext ctx;
 
 void test_ok(const char *expr, double expected) {
-    double result = eval(expr);
+    double result = eval(&ctx, expr);
     if (isnan(result) && isnan(expected)) {
         printf("✅ PASSED: %s = NaN\n", expr);
         passed++;
     } else if (isnan(result)) {
-        printf("❌ FAILED: %s\n    ↳ Threw an error\n", expr);
+        printf("❌ FAILED: %s\n    ↳ Threw an error \"%s\"\n", expr, ctx.error_msg);
         failed++;
     } else if (fabs(result - expected) > EPSILON) {
         printf("❌ FAILED: %s\n    ↳ Expected: %.9f\n    ↳ Got:      %.9f\n", expr, expected, result);
@@ -29,7 +30,7 @@ void test_ok(const char *expr, double expected) {
 }
 
 void test_error(const char *expr) {
-    double result = eval(expr);
+    double result = eval(&ctx, expr);
     if (isnan(result)) {
         printf("✅ PASSED (error): %s\n", expr);
         passed++;
@@ -42,6 +43,8 @@ void test_error(const char *expr) {
 
 int main(void) {
     puts("🧪 Running calculator tests...\n");
+
+    eval_ctx_init(&ctx);
 
     // Basic arithmetic
     test_ok("1+2", 3);
