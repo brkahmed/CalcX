@@ -3,6 +3,16 @@
 #include <ctype.h>
 #include <string.h>
 
+void complete(const char *input, replxx_completions *completions, int *context_len, void *_ctx) {
+    EvalContext *ctx = (EvalContext *)_ctx;
+    const char *name = input + strlen(input) - *context_len;
+    TableIterator iterator;
+    table_iter_init(&ctx->table, &iterator);
+    for (TableEntry *e; e = table_iter_next(&iterator);) {
+        if (strncasecmp(name, e->name, *context_len) == 0) replxx_add_completion(completions, e->name);
+    }
+}
+
 ReplxxActionResult close_parenthesis(int code, void *_replxx) {
     (void)code; // stop compiler warning
     Replxx *replxx = (Replxx *)_replxx;
