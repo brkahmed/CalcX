@@ -51,6 +51,7 @@ void highlight(char const *input, ReplxxColor *colors, int size, void *_ctx) {
             while (isalnum(input[i]) || input[i] == '_') i++;
             const char *name = strndup(input + start, i - start);
             TableEntry *e    = table_lookup(&ctx->table, name);
+            free(name);
             ReplxxColor color;
             if (!e)
                 color = REPLXX_COLOR_RED;
