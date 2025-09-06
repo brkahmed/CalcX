@@ -40,6 +40,20 @@ void table_init(Table *table) {
     table->size    = 0;
 }
 
+void table_clear(Table *table) {
+    for (size_t i = 0; i < table->size; i++) {
+        TableEntry *curr = table->entries[i];
+        while (curr) {
+            TableEntry *next = curr->next;
+            free(curr);
+            curr = next;
+        }
+    }
+    free(table->entries);
+    table->size  = 0;
+    table->count = 0;
+}
+
 static inline unsigned long hash_str(const char *str) { // ? Found online
     unsigned long hash = 1469598103934665603ULL;        // FNV offset basis
     while (*str) {

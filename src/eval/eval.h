@@ -9,6 +9,7 @@
 
 #include "table.h"
 #include "types.h"
+#include "functions.h"
 
 #define EVAL_ERROR_MSG_LEN      512
 #define EVAL_STRINGIFY_BUFFSIZE FLT128_MAX_10_EXP + FLT128_DIG + 10
@@ -40,7 +41,8 @@ typedef struct {
 } EvalContext;
 
 Number eval(EvalContext *ctx, const char *expr);
-void eval_ctx_init(EvalContext *ctx);
+void eval_init(EvalContext *ctx);
+void eval_end(EvalContext *ctx);
 char *eval_stringify(char *buff, size_t len, Number num);
 
 #endif

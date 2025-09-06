@@ -43,7 +43,7 @@ Number eval(EvalContext *ctx, const char *expr) {
     }
 }
 
-void eval_ctx_init(EvalContext *ctx) {
+void eval_init(EvalContext *ctx) {
     ctx->error_msg[0]    = '\0';
     ctx->error_type      = NoError;
     ctx->last_result     = NAN;
@@ -124,6 +124,15 @@ void eval_ctx_init(EvalContext *ctx) {
     table_set_cfunction(&ctx->table, "y0", (void *)y0q, 1);
     table_set_cfunction(&ctx->table, "y1", (void *)y1q, 1);
     table_set_cfunction(&ctx->table, "yn", (void *)e_yn, 2);
+}
+
+void eval_end(EvalContext *ctx) {
+    ctx->error_msg[0]    = '\0';
+    ctx->error_type      = NoError;
+    ctx->last_result     = NAN;
+    ctx->curr            = NULL;
+    ctx->recursion_depth = 0;
+    table_clear(&ctx->table);
 }
 
 char *eval_stringify(char *buff, size_t len, Number num) {

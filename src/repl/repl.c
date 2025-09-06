@@ -8,15 +8,12 @@
 
 #include "utility.c"
 
-void repl(void) {
+void repl(EvalContext *ctx) {
     Replxx *replxx = replxx_init();
     replxx_install_window_change_handler(replxx);
     replxx_set_ignore_case(replxx, true);
     replxx_set_highlighter_callback(replxx, highlight, replxx);
     // replxx_bind_key(replxx, '(', close_parenthesis, replxx);
-
-    EvalContext ctx;
-    eval_ctx_init(&ctx);
 
     while (true) {
         const char *input = NULL;
@@ -27,9 +24,9 @@ void repl(void) {
 
         replxx_history_add(replxx, input);
 
-        Number result = eval(&ctx, input);
-        if (ctx.error_type)
-            replxx_print(replxx, "Error: %s\n", ctx.error_msg);
+        Number result = eval(ctx, input);
+        if (ctx->error_type)
+            replxx_print(replxx, "Error: %s\n", ctx->error_msg);
         else
             replxx_print(replxx, "ans: %s\n", eval_stringify(NULL, 0, result));
     }

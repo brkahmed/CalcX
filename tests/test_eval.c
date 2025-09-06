@@ -6,7 +6,6 @@
 #include <quadmath.h>
 
 #include "eval.h"
-#include "functions.h"
 
 #define EPSILON 1e-9
 
@@ -46,7 +45,7 @@ void test_error(const char *expr) {
 int main(void) {
     puts("🧪 Running calculator tests...\n");
 
-    eval_ctx_init(&ctx);
+    eval_init(&ctx);
 
     // Basic arithmetic
     test_ok("1+2", 3);
@@ -131,6 +130,8 @@ int main(void) {
     test_ok("ans + 5", 15);        // ans = 15
     test_ok("ans^2", 225);         // ans = 225
     test_ok("ans + 4!", 225 + 24); // ans = 249
+
+    eval_end(&ctx);
 
     printf("\n🎉 Summary: %d passed, %d failed\n", passed, failed);
     return failed > 0 ? 1 : 0;

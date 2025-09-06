@@ -9,9 +9,11 @@ int main(int arg, char const *argv[]) {
         fprintf(stderr, "Usage: %s [expression]", argv[0]);
         return -1;
     }
+
+    EvalContext ctx;
+    eval_init(&ctx);
+
     if (arg == 2) {
-        EvalContext ctx;
-        eval_ctx_init(&ctx);
         Number result = eval(&ctx, argv[1]);
         if (ctx.error_type) {
             fprintf(stderr, "Error: %s\n", ctx.error_msg);
@@ -19,7 +21,8 @@ int main(int arg, char const *argv[]) {
         }
         printf("%s\n", eval_stringify(NULL, 0, result));
     } else
-        repl();
+        repl(&ctx);
 
+    eval_end(&ctx);
     return 0;
 }

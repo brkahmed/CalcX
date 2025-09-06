@@ -37,6 +37,7 @@ typedef struct {
 } Table;
 
 void table_init(Table *table);
+void table_clear(Table *table);
 TableEntry *table_lookup(Table *table, const char *name);
 TableEntry *table_set_cfunction(Table *table, const char *name, void *func, size_t arg_count);
 TableEntry *table_set_function(Table *table, const char *name, Function func, size_t min_args, size_t max_args);
