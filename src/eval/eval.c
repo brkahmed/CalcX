@@ -11,9 +11,6 @@
 
 #include <quadmath.h>
 
-#include "functions.h"
-#include "table.h"
-
 #define _c_or_eof(c) (c == '\0' ? "end of input" : (char[]){c, '\0'})
 #define CHECK_RECURSION_DEPTH(ctx, e)                                                                                  \
     do {                                                                                                               \

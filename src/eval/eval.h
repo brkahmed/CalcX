@@ -7,14 +7,13 @@
 
 #include <quadmath.h>
 
+#include "functions.h"
 #include "table.h"
 #include "types.h"
-#include "functions.h"
 
 #define EVAL_ERROR_MSG_LEN      512
 #define EVAL_STRINGIFY_BUFFSIZE FLT128_MAX_10_EXP + FLT128_DIG + 10
 #define MAX_FUNCTION_ARGS       1024
-#define MAX_IDENTIFIER_LEN      64
 #define MAX_RECURSION_DEPTH     1024
 
 typedef enum {
