@@ -14,9 +14,9 @@
         ptr;                                                                                                           \
     })
 
-#define xcalloc(type, size)                                                                                            \
+#define xcalloc(size, type)                                                                                            \
     ({                                                                                                                 \
-        type *ptr = (type *)calloc(sizeof(type), size);                                                                \
+        type *ptr = (type *)calloc(size, sizeof(type));                                                                \
         if (!ptr) {                                                                                                    \
             perror("xcalloc failed");                                                                                  \
             exit(EXIT_FAILURE);                                                                                        \

@@ -80,7 +80,7 @@ static TableEntry *table_add_entry(Table *table, TableEntry *entry) {
         size_t old_size          = table->size;
         table->count             = 0;
         table->size              = table->size == 0 ? TABLE_INITIAL_SIZE : table->size * 2;
-        table->entries           = xcalloc(TableEntry *, table->size);
+        table->entries           = xcalloc(table->size, TableEntry *);
         for (size_t i = 0; i < old_size; i++) {
             TableEntry *e = old_entries[i];
             while (e) {
