@@ -3,12 +3,12 @@
 #include <ctype.h>
 #include <string.h>
 
-ReplxxActionResult close_parenthesis(int code, void *userData) {
-    Replxx *replxx = (Replxx *)userData;
-    replxx_print(replxx, "%c\n", code);
-    // replxx_print(replxx, "(");
-    // replxx_emulate_key_press(replxx, ')');
-    // replxx_emulate_key_press(replxx, REPLXX_KEY_LEFT);
+ReplxxActionResult close_parenthesis(int code, void *_replxx) {
+    (void)code; // stop compiler warning
+    Replxx *replxx = (Replxx *)_replxx;
+    replxx_invoke(replxx, REPLXX_ACTION_INSERT_CHARACTER, '(');
+    replxx_invoke(replxx, REPLXX_ACTION_INSERT_CHARACTER, ')');
+    replxx_invoke(replxx, REPLXX_ACTION_MOVE_CURSOR_LEFT, 0);
     return REPLXX_ACTION_RESULT_CONTINUE;
 }
 

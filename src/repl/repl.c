@@ -13,7 +13,7 @@ void repl(EvalContext *ctx) {
     replxx_install_window_change_handler(replxx);
     replxx_set_ignore_case(replxx, true);
     replxx_set_highlighter_callback(replxx, highlight, ctx);
-    // replxx_bind_key(replxx, '(', close_parenthesis, replxx);
+    replxx_bind_key(replxx, '(', close_parenthesis, replxx);
 
     while (true) {
         const char *input = NULL;
