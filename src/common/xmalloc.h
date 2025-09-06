@@ -8,7 +8,17 @@
     ({                                                                                                                 \
         type *ptr = (type *)malloc(sizeof(type));                                                                      \
         if (!ptr) {                                                                                                    \
-            perror("Memory allocation failed");                                                                        \
+            perror("xmalloc failed");                                                                                  \
+            exit(EXIT_FAILURE);                                                                                        \
+        }                                                                                                              \
+        ptr;                                                                                                           \
+    })
+
+#define xcalloc(type, size)                                                                                            \
+    ({                                                                                                                 \
+        type *ptr = (type *)calloc(sizeof(type), size);                                                                \
+        if (!ptr) {                                                                                                    \
+            perror("xcalloc failed");                                                                                  \
             exit(EXIT_FAILURE);                                                                                        \
         }                                                                                                              \
         ptr;                                                                                                           \
@@ -18,7 +28,7 @@
     ({                                                                                                                 \
         type *new_ptr = (type *)realloc(ptr, sizeof(type) * (new_size));                                               \
         if (!new_ptr) {                                                                                                \
-            perror("Memory reallocation failed");                                                                      \
+            perror("xrealloc failed");                                                                                 \
             exit(EXIT_FAILURE);                                                                                        \
         }                                                                                                              \
         new_ptr;                                                                                                       \

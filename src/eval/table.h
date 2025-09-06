@@ -1,9 +1,11 @@
 #ifndef EVAL_TABLE_H
 #define EVAL_TABLE_H
 
-#include <stdlib.h>
+#include <stddef.h>
 
 #include "types.h"
+
+#define TABLE_INITIAL_SIZE 128
 
 typedef enum {
     ENTRY_TYPE_NUMBER,
@@ -11,7 +13,7 @@ typedef enum {
     ENTRY_TYPE_CFUNCTION,
 } EntryType;
 
-typedef struct {
+typedef struct TableEntry {
     const char *name;
     EntryType type;
     union {
@@ -25,12 +27,12 @@ typedef struct {
             size_t max_args;
         };
     };
+    struct TableEntry *next;
 } TableEntry;
 
 typedef struct {
-    const char **keys;
     TableEntry **entries;
-    size_t len;
+    size_t count;
     size_t size;
 } Table;
 

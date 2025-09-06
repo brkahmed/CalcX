@@ -6,11 +6,21 @@
     "arctanh",
     "inited",
     "Replxx",
+    "xcalloc",
     "xrealloc"
   ],
   "files.associations": {
     "stdbool.h": "c",
     "float.h": "c",
-    "quadmath.h": "c"
+    "quadmath.h": "c",
+    "array": "c",
+    "charconv": "c",
+    "compare": "c",
+    "functional": "c",
+    "ratio": "c",
+    "tuple": "c",
+    "type_traits": "c",
+    "utility": "c",
+    "variant": "c"
   }
 }
