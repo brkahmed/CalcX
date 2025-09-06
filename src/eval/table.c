@@ -54,6 +54,23 @@ void table_clear(Table *table) {
     table->count = 0;
 }
 
+void table_iter_init(Table *table, TableIterator *iterator) {
+    iterator->table = table;
+    iterator->idx   = 0;
+    iterator->next  = NULL;
+}
+
+TableEntry *table_iter_next(TableIterator *iterator) {
+    TableEntry *result;
+    if ((result = iterator->next)) {
+        iterator->next = result->next;
+        return result;
+    }
+    while (iterator->idx < iterator->table->size && !result) result = iterator->table->entries[iterator->idx++];
+    if (result) iterator->next = result->next;
+    return result;
+}
+
 static inline unsigned long hash_str(const char *str) { // ? Found online
     unsigned long hash = 1469598103934665603ULL;        // FNV offset basis
     while (*str) {
