@@ -66,9 +66,10 @@ int main(void) {
     test_ok("pi", E_PI);
     test_ok("e", E_E);
     test_ok("tau", E_TAU);
-    test_ok("phi", 1.618033988749895);
-    test_ok("90deg", 90 * 0.017453292519943295);
-    test_ok("pi rad", E_PI * 57.29577951308232);
+    test_ok("phi", E_PHI);
+    test_ok("90deg", 90 * E_DEG);
+    test_ok("pi rad", E_PI * E_RAD);
+    test_ok("c + na", E_C + E_NA);
 
     // Functions
     test_ok("sin(90deg)", 1);
@@ -84,6 +85,7 @@ int main(void) {
     test_ok("gamma(5)", tgammaq(5));
     test_ok("mod(9,4)", 1);
     test_ok("cos 0", 1);
+    test_ok("yn(5, 4)", ynq(5, 4));
 
     // Operators: ^, !, %
     test_ok("2^3", 8);
