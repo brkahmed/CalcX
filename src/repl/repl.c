@@ -16,6 +16,7 @@ void repl(EvalContext *ctx) {
     replxx_set_highlighter_callback(replxx, highlight, ctx);
     replxx_bind_key(replxx, '(', close_parenthesis, replxx);
     replxx_set_completion_callback(replxx, complete, ctx);
+    replxx_set_hint_callback(replxx, show_result, ctx);
 
     while (true) {
         const char *input = NULL;

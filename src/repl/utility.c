@@ -3,12 +3,24 @@
 #include <ctype.h>
 #include <string.h>
 
+void show_result(const char *input, replxx_hints *hints, int *context_len, ReplxxColor *color, void *_ctx) {
+    EvalContext *ctx = (EvalContext *)_ctx;
+    Number result    = eval(ctx, input);
+    if (ctx->error_type) return;
+    *color = REPLXX_COLOR_LIGHTGRAY;
+    size_t skip = *context_len + 2; // 2 is a good number <3
+    char buff[EVAL_STRINGIFY_BUFFSIZE + skip];
+    memset(buff, ' ', skip);
+    eval_stringify(buff + skip, EVAL_STRINGIFY_BUFFSIZE, result);
+    replxx_add_hint(hints, buff);
+}
+
 void complete(const char *input, replxx_completions *completions, int *context_len, void *_ctx) {
     EvalContext *ctx = (EvalContext *)_ctx;
     const char *name = input + strlen(input) - *context_len;
     TableIterator iterator;
     table_iter_init(&ctx->table, &iterator);
-    for (TableEntry *e; e = table_iter_next(&iterator);) {
+    for (TableEntry *e; (e = table_iter_next(&iterator));) {
         if (strncasecmp(name, e->name, *context_len) == 0) replxx_add_completion(completions, e->name);
     }
 }
