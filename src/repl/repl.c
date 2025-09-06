@@ -21,11 +21,13 @@ void repl(EvalContext *ctx) {
     while (true) {
         const char *input = NULL;
         do {
-            input = replxx_input(replxx, ">>> ");
+            input = replxx_input(replxx, "\x1b[32m>>> \x1b[0m");
         } while (input == NULL && errno == EAGAIN);
         if (input == NULL) break; // Ctrl+D
 
         replxx_history_add(replxx, input);
+
+        if (strncasecmp(":q", input, 5) == 0 || strncasecmp(":quit", input, 5) == 0) break;
 
         Number result = eval(ctx, input);
         if (ctx->error_type)
@@ -33,6 +35,5 @@ void repl(EvalContext *ctx) {
         else
             replxx_print(replxx, "ans: %s\n", eval_stringify(NULL, 0, result));
     }
-    replxx_print(replxx, "\n");
     replxx_end(replxx);
 }
