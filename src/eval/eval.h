@@ -15,6 +15,7 @@
 #define EVAL_STRINGIFY_BUFFSIZE FLT128_MAX_10_EXP + FLT128_DIG + 10
 #define MAX_FUNCTION_ARGS       1024
 #define MAX_RECURSION_DEPTH     1024
+#define COMPARISON_EPSILON      1e-16
 
 typedef enum {
     NoError,

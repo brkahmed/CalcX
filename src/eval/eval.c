@@ -267,7 +267,7 @@ static Number primary(EvalContext *ctx) {
 static Number factorial(EvalContext *ctx) {
     Number result = primary(ctx);
     skipspace(ctx);
-    while (*ctx->curr == '!') {
+    while (*ctx->curr == '!' && *(ctx->curr + 1) != '=') {
         result = e_factorial(result);
         ctx->curr++;
         skipspace(ctx);
@@ -353,6 +353,31 @@ static Number term(EvalContext *ctx) {
     }
 }
 
+static inline bool comparison_eq(Number x, Number y) { return fabsq(x - y) <= COMPARISON_EPSILON; }
+static inline bool comparison_le(Number x, Number y) { return x < y || comparison_eq(x, y); }
+static inline bool comparison_lt(Number x, Number y) { return x < y && !comparison_eq(x, y); }
+static inline bool comparison_ge(Number x, Number y) { return x > y || comparison_eq(x, y); }
+static inline bool comparison_gt(Number x, Number y) { return x > y && !comparison_eq(x, y); }
+
+static Number comparison(EvalContext *ctx) {
+    Number result = term(ctx);
+    while (true) {
+        skipspace(ctx);
+        if (*ctx->curr == '<')
+            result = *++ctx->curr == '=' && ++ctx->curr ? comparison_le(result, term(ctx))
+                                                        : comparison_lt(result, term(ctx));
+        else if (*ctx->curr == '>')
+            result = *++ctx->curr == '=' && ++ctx->curr ? comparison_ge(result, term(ctx))
+                                                        : comparison_gt(result, term(ctx));
+        else if (*ctx->curr == '=' && *(ctx->curr + 1) == '=' && (ctx->curr += 2))
+            result = comparison_eq(result, term(ctx));
+        else if (*ctx->curr == '!' && *(ctx->curr + 1) == '=' && (ctx->curr += 2))
+            result = !comparison_eq(result, term(ctx));
+        else
+            return result;
+    }
+}
+
 static Number assign(EvalContext *ctx) {
     skipspace(ctx);
     Number result = NAN;
@@ -369,7 +394,7 @@ static Number assign(EvalContext *ctx) {
             free(name);
         }
     }
-    return isnanq(result) ? term(ctx) : result;
+    return isnanq(result) ? comparison(ctx) : result;
 }
 
 static Number expression(EvalContext *ctx) {
