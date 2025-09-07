@@ -42,17 +42,24 @@ $ ./calc "2 + 3 * (4 + sin(pi/2))"
 
 ### 🔹 Operators
 
-| Operator | Meaning              | Example                         |
-| -------- | -------------------- | ------------------------------- |
-| `+`      | Addition             | `2 + 3`, `+1`                   |
-| `-`      | Subtraction / Negate | `5 - 2`, `-3`                   |
-| `*`      | Multiplication       | `2 * 4`                         |
-| `/`      | Division             | `8 / 2`                         |
-| `^`      | Exponentiation       | `2 ^ 3 = 8`                     |
-| `%`      | Modulo (remainder)   | `10 % 3 = 1`                    |
-| `!`      | Factorial            | `5! = 120`                      |
-| `!!`     | Chained factorial    | `5!! = factorial(factorial(5))` |
-| `\|x\|`  | Absolute value       | `\|-3\| = 3`                    |
+| Operator | Meaning                    | Example                           |
+| -------- | -------------------------- | --------------------------------- |
+| `+`      | Addition                   | `2 + 3`, `+1`                     |
+| `-`      | Subtraction / Negate       | `5 - 2`, `-3`                     |
+| `*`      | Multiplication             | `2 * 4`                           |
+| `/`      | Division                   | `8 / 2`                           |
+| `^`      | Exponentiation             | `2 ^ 3 = 8`                       |
+| `%`      | Modulo                     | `10 % 3 = 1`                      |
+| `!`      | Factorial                  | `5! = 120`                        |
+| `!!`     | Chained factorial          | `5!! = factorial(factorial(5))`   |
+| `\|x\|`  | Absolute value             | `\|-3\| = 3`                      |
+| `=`      | Assignment (returns value) | `x = y = pi * e`                  |
+| `==`     | Equality comparison        | `pi == 3 == 0`                    |
+| `!=`     | Inequality comparison      | `x != 25`                         |
+| `>`      | Greater than               | `3 > 4 > 1` same as `(3 > 4) > 1` |
+| `>=`     | Greater than or equal      | `e >= 2`                          |
+| `<`      | Less than                  | `(x = sin(25pi)) > 0`             |
+| `<=`     | Less than or equal         | `pi^2 <= e^3`                     |
 
 ---
 
