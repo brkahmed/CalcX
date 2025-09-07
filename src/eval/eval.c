@@ -389,7 +389,7 @@ static Number assign(EvalContext *ctx) {
         if (*end == '=' && *(end + 1) != '=') {
             char *name = strndup(ctx->curr, len);
             ctx->curr  = end + 1;
-            result     = expression(ctx);
+            CHECK_RECURSION_DEPTH(ctx, result = assign(ctx));
             table_set_number(&ctx->table, name, result);
             free(name);
         }
