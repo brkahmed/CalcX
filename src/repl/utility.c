@@ -54,9 +54,9 @@ void highlight(char const *input, ReplxxColor *colors, int size, void *_ctx) {
             free(name);
             ReplxxColor color;
             if (!e)
-                color = REPLXX_COLOR_RED;
+                color = replxx_color_underline(REPLXX_COLOR_RED);
             else if (e->type == ENTRY_TYPE_NUMBER)
-                color = REPLXX_COLOR_YELLOW;
+                color = REPLXX_COLOR_BROWN;
             else
                 color = REPLXX_COLOR_BRIGHTMAGENTA;
             while (start < i) colors[start++] = color;
