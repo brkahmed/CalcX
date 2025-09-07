@@ -111,6 +111,11 @@ int main(void) {
     test_ok("2/3pi", 2.0 / 3 * E_PI);
     test_ok("2asin(sin(90deg+tau))rad", 180);
 
+    // Assignment
+    test_ok("x = y = z = pi e", E_PI * E_E);
+    test_ok("x / e ^ 2 * y", E_PI * E_PI);
+    test_ok("sin(m = z = 2pi + e) + m * z", sinq(E_E) + powq(2 * E_PI + E_E, 2));
+
     // Complex nested expressions
     test_ok("((2+3)*4)^2", powq(20, 2));
     test_ok("min(3, max(2,1+1), sqrt(16))", 2);
