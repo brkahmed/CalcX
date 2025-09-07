@@ -6,7 +6,7 @@
 
 static TableEntry *table_entry_new_cfunction(const char *name, void *func, size_t arg_count) {
     TableEntry *entry = xmalloc(TableEntry);
-    entry->name       = name;
+    entry->name       = strdup(name);
     entry->type       = ENTRY_TYPE_CFUNCTION;
     entry->cfunc      = func;
     entry->next       = NULL;
@@ -16,7 +16,7 @@ static TableEntry *table_entry_new_cfunction(const char *name, void *func, size_
 
 static TableEntry *table_entry_new_function(const char *name, Function func, size_t min_args, size_t max_args) {
     TableEntry *entry = xmalloc(TableEntry);
-    entry->name       = name;
+    entry->name       = strdup(name);
     entry->type       = ENTRY_TYPE_FUNCTION;
     entry->func       = func;
     entry->min_args   = min_args;
@@ -27,11 +27,16 @@ static TableEntry *table_entry_new_function(const char *name, Function func, siz
 
 static TableEntry *table_entry_new_number(const char *name, Number value) {
     TableEntry *entry = xmalloc(TableEntry);
-    entry->name       = name;
+    entry->name       = strdup(name);
     entry->type       = ENTRY_TYPE_NUMBER;
     entry->num        = value;
     entry->next       = NULL;
     return entry;
+}
+
+static inline void table_entry_free(TableEntry *entry) {
+    free(entry->name);
+    free(entry);
 }
 
 void table_init(Table *table) {
@@ -45,7 +50,7 @@ void table_clear(Table *table) {
         TableEntry *curr = table->entries[i];
         while (curr) {
             TableEntry *next = curr->next;
-            free(curr);
+            table_entry_free(curr);
             curr = next;
         }
     }
