@@ -353,8 +353,27 @@ static Number term(EvalContext *ctx) {
     }
 }
 
+static Number assign(EvalContext *ctx) {
+    skipspace(ctx);
+    Number result = NAN;
+    if (isalpha(*ctx->curr) || *ctx->curr == '_') {
+        const char *end = ctx->curr;
+        while (isalnum(*end) || *end == '_') end++;
+        size_t len = end - ctx->curr;
+        while (isspace(*end)) end++;
+        if (*end == '=' && *(end + 1) != '=') {
+            const char *name = strndup(ctx->curr, len);
+            ctx->curr        = end + 1;
+            result           = expression(ctx);
+            table_set_number(&ctx->table, name, result);
+            free(name);
+        }
+    }
+    return isnanq(result) ? term(ctx) : result;
+}
+
 static Number expression(EvalContext *ctx) {
     Number result;
-    CHECK_RECURSION_DEPTH(ctx, result = term(ctx));
+    CHECK_RECURSION_DEPTH(ctx, result = assign(ctx));
     return result;
 }
