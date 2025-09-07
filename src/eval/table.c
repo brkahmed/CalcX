@@ -35,7 +35,7 @@ static TableEntry *table_entry_new_number(const char *name, Number value) {
 }
 
 static inline void table_entry_free(TableEntry *entry) {
-    free(entry->name);
+    free((void *)entry->name);
     free(entry);
 }
 

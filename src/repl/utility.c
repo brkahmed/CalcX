@@ -49,7 +49,7 @@ void highlight(char const *input, ReplxxColor *colors, int size, void *_ctx) {
         else if (isalpha(input[i]) || input[i] == '_') {
             int start = i;
             while (isalnum(input[i]) || input[i] == '_') i++;
-            const char *name = strndup(input + start, i - start);
+            char *name = strndup(input + start, i - start);
             TableEntry *e    = table_lookup(&ctx->table, name);
             free(name);
             ReplxxColor color;

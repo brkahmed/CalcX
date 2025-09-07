@@ -362,9 +362,9 @@ static Number assign(EvalContext *ctx) {
         size_t len = end - ctx->curr;
         while (isspace(*end)) end++;
         if (*end == '=' && *(end + 1) != '=') {
-            const char *name = strndup(ctx->curr, len);
-            ctx->curr        = end + 1;
-            result           = expression(ctx);
+            char *name = strndup(ctx->curr, len);
+            ctx->curr  = end + 1;
+            result     = expression(ctx);
             table_set_number(&ctx->table, name, result);
             free(name);
         }
