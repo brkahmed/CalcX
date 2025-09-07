@@ -7,7 +7,7 @@
 
 #include "eval.h"
 
-#define EPSILON 1e-9
+#define EPSILON 1e-16
 
 static int failed = 0;
 static int passed = 0;
@@ -15,14 +15,17 @@ static EvalContext ctx;
 
 void test_ok(const char *expr, Number expected) {
     Number result = eval(&ctx, expr);
+    Number error_rate, diff;
     if (ctx.error_type) {
-        printf("❌ FAILED: %s\n    ↳ Threw an error \"%s\"\n", expr, ctx.error_msg);
+        printf("❌ FAILED: %s\n", expr);
+        printf("    ↳ Threw an error \"%s\"\n", ctx.error_msg);
         failed++;
-    } else if (fabsq(result - expected) > EPSILON) {
-        printf(
-            "❌ FAILED: %s\n    ↳ Expected: %s\n    ↳ Got:      %s\n", expr, eval_stringify(NULL, 0, expected),
-            eval_stringify(NULL, 0, result)
-        );
+    } else if ((error_rate = (diff = fabsq(result - expected)) / fabsq(expected)) > EPSILON) {
+        printf("❌ FAILED: %s\n", expr);
+        printf("    ↳ Expected:   %s\n", eval_stringify(NULL, 0, expected));
+        printf("    ↳ Got:        %s\n", eval_stringify(NULL, 0, result));
+        printf("    ↳ Diff:       %s\n", eval_stringify(NULL, 0, diff));
+        printf("    ↳ Error rate: %s%%\n", eval_stringify(NULL, 0, error_rate * 100));
         failed++;
     } else {
         printf("✅ PASSED: %s = %s\n", expr, eval_stringify(NULL, 0, result));
@@ -37,7 +40,8 @@ void test_error(const char *expr) {
         passed++;
         return;
     } else {
-        printf("❌ FAILED: %s\n    ↳ Expected error but got %s\n", expr, eval_stringify(NULL, 0, result));
+        printf("❌ FAILED: %s\n", expr);
+        printf("    ↳ Expected error but got %s\n", eval_stringify(NULL, 0, result));
         failed++;
     }
 }
@@ -115,6 +119,25 @@ int main(void) {
     test_ok("x = y = z = pi e", E_PI * E_E);
     test_ok("x / e ^ 2 * y", E_PI * E_PI);
     test_ok("sin(m = z = 2pi + e) + m * z", sinq(E_E) + powq(2 * E_PI + E_E, 2));
+
+    // Comparison
+    test_ok("2 == 2", 1);
+    test_ok("pi == 3", 0);
+    test_ok("5 != 3", 1);
+    test_ok("5 != 5", 0);
+    test_ok("3 < 4", 1);
+    test_ok("12 < 6", 0);
+    test_ok("pi <= 3", 0);
+    test_ok("2 <= 3", 1);
+    test_ok("3 <= 3", 1);
+    test_ok("5 > 2", 1);
+    test_ok("-1 > 2", 0);
+    test_ok("e >= 2", 1);
+    test_ok("5 >= 5", 1);
+    test_ok("4 >= 6", 0);
+    test_ok("(x=pi) == pi", 1);
+    test_ok("2 == 2 == 1", 1); // (2 == 2) == 1 → 1 == 1 = true
+    test_ok("2 < 3 >= 1", 1);  // (2 < 3) > 1 → 1 >= 1 = true
 
     // Complex nested expressions
     test_ok("((2+3)*4)^2", powq(20, 2));
