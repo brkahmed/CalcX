@@ -3,11 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <quadmath.h>
-
 #include "eval.h"
 
+#ifdef HAVE_QUADMATH
 #define EPSILON 1e-16
+#else
+#define EPSILON 1e-15
+#endif
 
 static int failed = 0;
 static int passed = 0;
@@ -20,7 +22,7 @@ void test_ok(const char *expr, Number expected) {
         printf("❌ FAILED: %s\n", expr);
         printf("    ↳ Threw an error \"%s\"\n", ctx.error_msg);
         failed++;
-    } else if ((error_rate = (diff = fabsq(result - expected)) / fabsq(expected)) > EPSILON) {
+    } else if ((error_rate = (diff = e_abs(result - expected)) / e_abs(expected)) > EPSILON) {
         printf("❌ FAILED: %s\n", expr);
         printf("    ↳ Expected:   %s\n", eval_stringify(NULL, 0, expected));
         printf("    ↳ Got:        %s\n", eval_stringify(NULL, 0, result));
@@ -85,10 +87,10 @@ int main(void) {
     test_ok("min(5,2,8)", 2);
     test_ok("max(5,2,8)", 8);
     test_ok("factorial(4)", 24);
-    test_ok("gamma(5)", tgammaq(5));
+    test_ok("gamma(5)", e_tgamma(5));
     test_ok("mod(9,4)", 1);
     test_ok("cos 0", 1);
-    test_ok("yn(5, 4)", ynq(5, 4));
+    test_ok("yn(5, 4)", e_yn(5, 4));
 
     // Operators: ^, !, %
     test_ok("2^3", 8);
@@ -100,7 +102,7 @@ int main(void) {
     test_ok("3!!", 720);
     test_ok("4!*2", 48);
     test_ok("3*4!*2", 48 * 3);
-    test_ok("pi!", tgammaq(E_PI + 1));
+    test_ok("pi!", e_tgamma(E_PI + 1));
     test_ok("7 % 4", 3);
     test_ok("7 % 4 ^ 2", 7); // 7 % (4^2)
     test_ok("9 % 5!", 9);
@@ -118,7 +120,7 @@ int main(void) {
     // Assignment
     test_ok("x = y = z = pi e", E_PI * E_E);
     test_ok("x / e ^ 2 * y", E_PI * E_PI);
-    test_ok("sin(m = z = 2pi + e) + m * z", sinq(E_E) + powq(2 * E_PI + E_E, 2));
+    test_ok("sin(m = z = 2pi + e) + m * z", e_sin(E_E) + e_pow(2 * E_PI + E_E, 2));
 
     // Comparison
     test_ok("2 == 2", 1);
@@ -140,10 +142,10 @@ int main(void) {
     test_ok("2 < 3 >= 1", 1);  // (2 < 3) > 1 → 1 >= 1 = true
 
     // Complex nested expressions
-    test_ok("((2+3)*4)^2", powq(20, 2));
+    test_ok("((2+3)*4)^2", e_pow(20, 2));
     test_ok("min(3, max(2,1+1), sqrt(16))", 2);
     test_ok("abs(-5 + min(3,2)^2)", 1);
-    test_ok("((2+3)!)^2", powq(120, 2));
+    test_ok("((2+3)!)^2", e_pow(120, 2));
     test_ok("2(3 + 4(5 + 6))", 94); // 2*(3+4*11) = 2*(3+44) = 94
     test_ok("abs(round(-4.6)) + max(2,3,4)", 9);
 

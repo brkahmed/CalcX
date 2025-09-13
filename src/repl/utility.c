@@ -1,13 +1,16 @@
 #include "replxx.h"
 
 #include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include <eval.h>
 
 void show_result(const char *input, replxx_hints *hints, int *context_len, ReplxxColor *color, void *_ctx) {
     EvalContext *ctx = (EvalContext *)_ctx;
     Number result    = eval(ctx, input);
     if (ctx->error_type) return;
-    *color = REPLXX_COLOR_LIGHTGRAY;
+    *color      = REPLXX_COLOR_LIGHTGRAY;
     size_t skip = *context_len + 2; // 2 is a good number <3
     char buff[EVAL_STRINGIFY_BUFFSIZE + skip];
     memset(buff, ' ', skip);
@@ -49,8 +52,8 @@ void highlight(char const *input, ReplxxColor *colors, int size, void *_ctx) {
         else if (isalpha(input[i]) || input[i] == '_') {
             int start = i;
             while (isalnum(input[i]) || input[i] == '_') i++;
-            char *name = strndup(input + start, i - start);
-            TableEntry *e    = table_lookup(&ctx->table, name);
+            char *name    = strndup(input + start, i - start);
+            TableEntry *e = table_lookup(&ctx->table, name);
             free(name);
             ReplxxColor color;
             if (!e)

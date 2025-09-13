@@ -5,7 +5,13 @@
     "arctan",
     "arctanh",
     "inited",
+    "libmath",
+    "libquadmath",
+    "logq",
+    "quadmath",
     "Replxx",
+    "STREQUAL",
+    "Wextra",
     "xcalloc",
     "xrealloc"
   ],
@@ -22,6 +28,7 @@
     "type_traits": "c",
     "utility": "c",
     "variant": "c",
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "cmath": "c"
   }
 }

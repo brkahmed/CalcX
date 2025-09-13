@@ -5,17 +5,15 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <quadmath.h>
-
 #include "functions.h"
 #include "table.h"
 #include "types.h"
 
-#define EVAL_ERROR_MSG_LEN      512
-#define EVAL_STRINGIFY_BUFFSIZE FLT128_MAX_10_EXP + FLT128_DIG + 10
-#define MAX_FUNCTION_ARGS       1024
-#define MAX_RECURSION_DEPTH     1024
-#define COMPARISON_EPSILON      1e-16
+#define EVAL_STRINGIFY_BUFFSIZE E_NUMBER_MAX_10_EXP + E_NUMBER_DIG + 10
+#define EVAL_ERROR_MSG_LEN  512
+#define MAX_FUNCTION_ARGS   1024
+#define MAX_RECURSION_DEPTH 1024
+#define COMPARISON_EPSILON  1e-16
 
 typedef enum {
     NoError,

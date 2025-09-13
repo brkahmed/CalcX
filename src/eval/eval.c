@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <quadmath.h>
+#include "functions.h"
+#include "table.h"
+#include "types.h"
 
 #define _c_or_eof(c) (c == '\0' ? "end of input" : (char[]){c, '\0'})
 #define CHECK_RECURSION_DEPTH(ctx, e)                                                                                  \
@@ -31,19 +33,19 @@ Number eval(EvalContext *ctx, const char *expr) {
         if (*ctx->curr != '\0') {
             ctx->error_type = SyntaxError;
             snprintf(ctx->error_msg, EVAL_ERROR_MSG_LEN * sizeof(char), "Unexpected character '%c'", *ctx->curr);
-            return NAN;
+            return E_NAN;
         }
         table_set_number(&ctx->table, "ans", ctx->last_result);
         return ctx->last_result;
     } else {
-        return NAN;
+        return E_NAN;
     }
 }
 
 void eval_init(EvalContext *ctx) {
     ctx->error_msg[0]    = '\0';
     ctx->error_type      = NoError;
-    ctx->last_result     = NAN;
+    ctx->last_result     = E_NAN;
     ctx->curr            = NULL;
     ctx->recursion_depth = 0;
     table_init(&ctx->table);
@@ -59,74 +61,74 @@ void eval_init(EvalContext *ctx) {
     table_set_number(&ctx->table, "na", E_NA);
 
     /* Trigonometric */
-    table_set_cfunction(&ctx->table, "sin", (void *)sinq, 1);
-    table_set_cfunction(&ctx->table, "cos", (void *)cosq, 1);
-    table_set_cfunction(&ctx->table, "tan", (void *)tanq, 1);
-    table_set_cfunction(&ctx->table, "asin", (void *)asinq, 1);
-    table_set_cfunction(&ctx->table, "arcsin", (void *)asinq, 1);
-    table_set_cfunction(&ctx->table, "acos", (void *)acosq, 1);
-    table_set_cfunction(&ctx->table, "arccos", (void *)acosq, 1);
-    table_set_cfunction(&ctx->table, "atan", (void *)atanq, 1);
-    table_set_cfunction(&ctx->table, "arctan", (void *)atanq, 1);
-    table_set_cfunction(&ctx->table, "atan2", (void *)atan2q, 2);
-    table_set_cfunction(&ctx->table, "arctan2", (void *)atan2q, 2);
+    table_set_cfunction(&ctx->table, "sin", (void *)e_sin, 1);
+    table_set_cfunction(&ctx->table, "cos", (void *)e_cos, 1);
+    table_set_cfunction(&ctx->table, "tan", (void *)e_tan, 1);
+    table_set_cfunction(&ctx->table, "asin", (void *)e_asin, 1);
+    table_set_cfunction(&ctx->table, "arcsin", (void *)e_asin, 1);
+    table_set_cfunction(&ctx->table, "acos", (void *)e_acos, 1);
+    table_set_cfunction(&ctx->table, "arccos", (void *)e_acos, 1);
+    table_set_cfunction(&ctx->table, "atan", (void *)e_atan, 1);
+    table_set_cfunction(&ctx->table, "arctan", (void *)e_atan, 1);
+    table_set_cfunction(&ctx->table, "atan2", (void *)e_atan2, 2);
+    table_set_cfunction(&ctx->table, "arctan2", (void *)e_atan2, 2);
 
     /* Hyperbolic */
-    table_set_cfunction(&ctx->table, "sinh", (void *)sinhq, 1);
-    table_set_cfunction(&ctx->table, "cosh", (void *)coshq, 1);
-    table_set_cfunction(&ctx->table, "tanh", (void *)tanhq, 1);
-    table_set_cfunction(&ctx->table, "asinh", (void *)asinhq, 1);
-    table_set_cfunction(&ctx->table, "arcsinh", (void *)asinhq, 1);
-    table_set_cfunction(&ctx->table, "acosh", (void *)acoshq, 1);
-    table_set_cfunction(&ctx->table, "arccosh", (void *)acoshq, 1);
-    table_set_cfunction(&ctx->table, "atanh", (void *)atanhq, 1);
-    table_set_cfunction(&ctx->table, "arctanh", (void *)atanhq, 1);
+    table_set_cfunction(&ctx->table, "sinh", (void *)e_sinh, 1);
+    table_set_cfunction(&ctx->table, "cosh", (void *)e_cosh, 1);
+    table_set_cfunction(&ctx->table, "tanh", (void *)e_tanh, 1);
+    table_set_cfunction(&ctx->table, "asinh", (void *)e_asinh, 1);
+    table_set_cfunction(&ctx->table, "arcsinh", (void *)e_asinh, 1);
+    table_set_cfunction(&ctx->table, "acosh", (void *)e_acosh, 1);
+    table_set_cfunction(&ctx->table, "arccosh", (void *)e_acosh, 1);
+    table_set_cfunction(&ctx->table, "atanh", (void *)e_atanh, 1);
+    table_set_cfunction(&ctx->table, "arctanh", (void *)e_atanh, 1);
 
     /* Exponential and Logarithmic */
-    table_set_cfunction(&ctx->table, "exp", (void *)expq, 1);
-    table_set_cfunction(&ctx->table, "exp2", (void *)exp2q, 1);
-    table_set_cfunction(&ctx->table, "ln", (void *)logq, 1);
-    table_set_cfunction(&ctx->table, "log", (void *)logq, 1);
-    table_set_cfunction(&ctx->table, "log10", (void *)log10q, 1);
-    table_set_cfunction(&ctx->table, "log2", (void *)log2q, 1);
+    table_set_cfunction(&ctx->table, "exp", (void *)e_exp, 1);
+    table_set_cfunction(&ctx->table, "exp2", (void *)e_exp2, 1);
+    table_set_cfunction(&ctx->table, "ln", (void *)e_log, 1);
+    table_set_cfunction(&ctx->table, "log", (void *)e_log, 1);
+    table_set_cfunction(&ctx->table, "log10", (void *)e_log10, 1);
+    table_set_cfunction(&ctx->table, "log2", (void *)e_log2, 1);
     table_set_cfunction(&ctx->table, "logb", (void *)e_logb, 2);
 
     /* Rounding */
-    table_set_cfunction(&ctx->table, "round", (void *)roundq, 1);
-    table_set_cfunction(&ctx->table, "floor", (void *)floorq, 1);
-    table_set_cfunction(&ctx->table, "ceil", (void *)ceilq, 1);
-    table_set_cfunction(&ctx->table, "trunc", (void *)truncq, 1);
+    table_set_cfunction(&ctx->table, "round", (void *)e_round, 1);
+    table_set_cfunction(&ctx->table, "floor", (void *)e_floor, 1);
+    table_set_cfunction(&ctx->table, "ceil", (void *)e_ceil, 1);
+    table_set_cfunction(&ctx->table, "trunc", (void *)e_trunc, 1);
 
     /* Power and Root */
-    table_set_cfunction(&ctx->table, "sqrt", (void *)sqrtq, 1);
-    table_set_cfunction(&ctx->table, "cbrt", (void *)cbrtq, 1);
-    table_set_cfunction(&ctx->table, "pow", (void *)powq, 2);
-    table_set_cfunction(&ctx->table, "hypot", (void *)hypotq, 2);
+    table_set_cfunction(&ctx->table, "sqrt", (void *)e_sqrt, 1);
+    table_set_cfunction(&ctx->table, "cbrt", (void *)e_cbrt, 1);
+    table_set_cfunction(&ctx->table, "pow", (void *)e_pow, 2);
+    table_set_cfunction(&ctx->table, "hypot", (void *)e_hypot, 2);
 
     /* General */
-    table_set_cfunction(&ctx->table, "abs", (void *)fabsq, 1);
-    table_set_cfunction(&ctx->table, "mod", (void *)fmodq, 2);
-    table_set_cfunction(&ctx->table, "remainder", (void *)remainderq, 2);
-    table_set_cfunction(&ctx->table, "fma", (void *)fmaq, 3);
+    table_set_cfunction(&ctx->table, "abs", (void *)e_abs, 1);
+    table_set_cfunction(&ctx->table, "mod", (void *)e_mod, 2);
+    table_set_cfunction(&ctx->table, "remainder", (void *)e_remainder, 2);
+    table_set_cfunction(&ctx->table, "fma", (void *)e_fma, 3);
     table_set_function(&ctx->table, "max", (Function)e_max, 0, MAX_FUNCTION_ARGS);
     table_set_function(&ctx->table, "min", (Function)e_min, 0, MAX_FUNCTION_ARGS);
     table_set_cfunction(&ctx->table, "factorial", (void *)e_factorial, 1);
-    table_set_cfunction(&ctx->table, "gamma", (void *)tgammaq, 1);
-    table_set_cfunction(&ctx->table, "lgamma", (void *)lgammaq, 1);
-    table_set_cfunction(&ctx->table, "erf", (void *)erfq, 1);
-    table_set_cfunction(&ctx->table, "erfc", (void *)erfcq, 1);
-    table_set_cfunction(&ctx->table, "j0", (void *)j0q, 1);
-    table_set_cfunction(&ctx->table, "j1", (void *)j1q, 1);
+    table_set_cfunction(&ctx->table, "gamma", (void *)e_tgamma, 1);
+    table_set_cfunction(&ctx->table, "lgamma", (void *)e_lgamma, 1);
+    table_set_cfunction(&ctx->table, "erf", (void *)e_erf, 1);
+    table_set_cfunction(&ctx->table, "erfc", (void *)e_erfc, 1);
+    table_set_cfunction(&ctx->table, "j0", (void *)e_j0, 1);
+    table_set_cfunction(&ctx->table, "j1", (void *)e_j1, 1);
     table_set_cfunction(&ctx->table, "jn", (void *)e_jn, 2);
-    table_set_cfunction(&ctx->table, "y0", (void *)y0q, 1);
-    table_set_cfunction(&ctx->table, "y1", (void *)y1q, 1);
+    table_set_cfunction(&ctx->table, "y0", (void *)e_y0, 1);
+    table_set_cfunction(&ctx->table, "y1", (void *)e_y1, 1);
     table_set_cfunction(&ctx->table, "yn", (void *)e_yn, 2);
 }
 
 void eval_end(EvalContext *ctx) {
     ctx->error_msg[0]    = '\0';
     ctx->error_type      = NoError;
-    ctx->last_result     = NAN;
+    ctx->last_result     = E_NAN;
     ctx->curr            = NULL;
     ctx->recursion_depth = 0;
     table_clear(&ctx->table);
@@ -138,7 +140,7 @@ char *eval_stringify(char *buff, size_t len, Number num) {
         buff = default_buff;
         len  = EVAL_STRINGIFY_BUFFSIZE;
     }
-    len       = quadmath_snprintf(buff, len * sizeof(char), "%.*Qf", FLT128_DIG, num);
+    len       = e_snprintf(buff, len * sizeof(char), "%.*" E_NUMBER_FMT, E_NUMBER_DIG, num);
     char *dot = strchr(buff, '.');
     if (dot) {
         char *end = buff + len - 1;
@@ -171,7 +173,7 @@ static void eatchar(EvalContext *ctx, char c) {
 
 static Number number(EvalContext *ctx) {
     char *end;
-    Number result = strtoflt128(ctx->curr, &end);
+    Number result = e_strtonum(ctx->curr, &end);
     ctx->curr     = end;
     return result;
 }
@@ -187,7 +189,7 @@ static Number absolute(EvalContext *ctx) {
     ctx->curr++; // eat the absolute value pipe '|'
     Number result = expression(ctx);
     eatchar(ctx, '|');
-    return fabsq(result);
+    return e_abs(result);
 }
 
 static TableEntry *identifier(EvalContext *ctx) {
@@ -247,7 +249,8 @@ static Number function_call(EvalContext *ctx, TableEntry *entry) {
             case 3: result = ((Number (*)(Number, Number, Number))entry->cfunc)(args[0], args[1], args[2]); break;
             default: _error(ctx, ImplementationError, "C function '%s' supports up to 3 arguments", entry->name);
         }
-    if (isnanq(result)) _error(ctx, FunctionArgumentRangeError, "Function '%s' got argument out of range", entry->name);
+    if (e_isnan(result))
+        _error(ctx, FunctionArgumentRangeError, "Function '%s' got argument out of range", entry->name);
     return result;
 }
 
@@ -280,7 +283,7 @@ static Number exponent(EvalContext *ctx) {
     skipspace(ctx);
     if (*ctx->curr == '^') {
         ctx->curr++;
-        CHECK_RECURSION_DEPTH(ctx, result = powq(result, exponent(ctx)));
+        CHECK_RECURSION_DEPTH(ctx, result = e_pow(result, exponent(ctx)));
     }
     return result;
 }
@@ -324,7 +327,7 @@ static Number factor(EvalContext *ctx) {
                         ctx, ModuloByZeroError, "Modulo by zero (%s %% %s)",
                         eval_stringify(errorbuff, EVAL_STRINGIFY_BUFFSIZE, result), eval_stringify(NULL, 0, denom)
                     );
-                result = fmodq(result, denom);
+                result = e_mod(result, denom);
                 break;
             default:
                 if (isalpha(*ctx->curr) || *ctx->curr == '_' || *ctx->curr == '(') // Implicit multiplication
@@ -353,7 +356,7 @@ static Number term(EvalContext *ctx) {
     }
 }
 
-static inline bool comparison_eq(Number x, Number y) { return fabsq(x - y) <= COMPARISON_EPSILON; }
+static inline bool comparison_eq(Number x, Number y) { return e_abs(x - y) <= COMPARISON_EPSILON; }
 static inline bool comparison_le(Number x, Number y) { return x < y || comparison_eq(x, y); }
 static inline bool comparison_lt(Number x, Number y) { return x < y && !comparison_eq(x, y); }
 static inline bool comparison_ge(Number x, Number y) { return x > y || comparison_eq(x, y); }
@@ -380,7 +383,7 @@ static Number comparison(EvalContext *ctx) {
 
 static Number assign(EvalContext *ctx) {
     skipspace(ctx);
-    Number result = NAN;
+    Number result = E_NAN;
     if (isalpha(*ctx->curr) || *ctx->curr == '_') {
         const char *end = ctx->curr;
         while (isalnum(*end) || *end == '_') end++;
@@ -394,7 +397,7 @@ static Number assign(EvalContext *ctx) {
             free(name);
         }
     }
-    return isnanq(result) ? comparison(ctx) : result;
+    return e_isnan(result) ? comparison(ctx) : result;
 }
 
 static Number expression(EvalContext *ctx) {
