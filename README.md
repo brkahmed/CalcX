@@ -15,18 +15,20 @@ This is a command-line calculator that evaluates complex math expressions. It su
 - **Single expression mode** (evaluate and exit):
 
 ```bash
-$ ./calc "2 + 3 * (4 + sin(pi/2))"
-17.000000
+$ ./CalcX "x = 2 + 3 * (4 + sin(pi/2))" "y = cos(25pi * e)" "z=x+y"
+17
+0.990908748684919434565983548310094
+17.990908748684919434565983548310094
 ```
 
 - **REPL mode** (no argument = interactive prompt):
 
 ```bash
-./calc
+./CalcX
 >>> 1 + 2
-3.000000
->>> ans * 10
-30.000000
+3
+>>> sin(tau) == 0
+1
 ```
 
 ---
