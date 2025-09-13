@@ -40,9 +40,10 @@ static inline void table_entry_free(TableEntry *entry) {
 }
 
 void table_init(Table *table) {
-    table->entries = NULL;
-    table->count   = 0;
-    table->size    = 0;
+    table->entries   = NULL;
+    table->count     = 0;
+    table->size      = 0;
+    table->enclosing = NULL;
 }
 
 void table_clear(Table *table) {
@@ -85,15 +86,17 @@ static inline unsigned long hash_str(const char *str) { // ? Found online
     return hash;
 }
 
-TableEntry *table_lookup(Table *table, const char *name) {
-    if (table->count == 0) return NULL;
-    unsigned long hash = hash_str(name);
-    TableEntry *entry  = table->entries[hash & (table->size - 1)];
-    while (entry) {
-        if (strcmp(entry->name, name) == 0) return entry;
-        entry = entry->next;
+TableEntry *table_lookup(Table *table, const char *name, bool look_enclosing) {
+    if (!table) return NULL;
+    if (table->count) {
+        unsigned long hash = hash_str(name);
+        TableEntry *entry  = table->entries[hash & (table->size - 1)];
+        while (entry) {
+            if (strcmp(entry->name, name) == 0) return entry;
+            entry = entry->next;
+        }
     }
-    return NULL;
+    return look_enclosing ? table_lookup(table->enclosing, name, look_enclosing) : NULL;
 }
 
 static TableEntry *table_add_entry(Table *table, TableEntry *entry) {
@@ -123,7 +126,7 @@ static TableEntry *table_add_entry(Table *table, TableEntry *entry) {
 }
 
 TableEntry *table_set_cfunction(Table *table, const char *name, void *func, size_t arg_count) {
-    TableEntry *entry = table_lookup(table, name);
+    TableEntry *entry = table_lookup(table, name, false);
     if (entry) {
         entry->type     = ENTRY_TYPE_CFUNCTION;
         entry->cfunc    = func;
@@ -136,7 +139,7 @@ TableEntry *table_set_cfunction(Table *table, const char *name, void *func, size
 }
 
 TableEntry *table_set_function(Table *table, const char *name, Function func, size_t min_args, size_t max_args) {
-    TableEntry *entry = table_lookup(table, name);
+    TableEntry *entry = table_lookup(table, name, false);
     if (entry) {
         entry->type     = ENTRY_TYPE_FUNCTION;
         entry->func     = func;
@@ -150,7 +153,7 @@ TableEntry *table_set_function(Table *table, const char *name, Function func, si
 }
 
 TableEntry *table_set_number(Table *table, const char *name, Number value) {
-    TableEntry *entry = table_lookup(table, name);
+    TableEntry *entry = table_lookup(table, name, false);
     if (entry) {
         entry->type = ENTRY_TYPE_NUMBER;
         entry->num  = value;

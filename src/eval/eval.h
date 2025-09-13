@@ -10,10 +10,10 @@
 #include "types.h"
 
 #define EVAL_STRINGIFY_BUFFSIZE E_NUMBER_MAX_10_EXP + E_NUMBER_DIG + 10
-#define EVAL_ERROR_MSG_LEN  512
-#define MAX_FUNCTION_ARGS   1024
-#define MAX_RECURSION_DEPTH 1024
-#define COMPARISON_EPSILON  1e-16
+#define EVAL_ERROR_MSG_LEN      512
+#define MAX_FUNCTION_ARGS       1024
+#define MAX_RECURSION_DEPTH     1024
+#define COMPARISON_EPSILON      1e-16
 
 typedef enum {
     NoError,
@@ -31,7 +31,7 @@ typedef struct {
     char error_msg[EVAL_ERROR_MSG_LEN];
     EvalErrorType error_type;
     Number last_result;
-    Table table;
+    Table *table;
 
     const char *curr;
     jmp_buf env;
@@ -39,6 +39,8 @@ typedef struct {
 } EvalContext;
 
 Number eval(EvalContext *ctx, const char *expr);
+void eval_scope_new(EvalContext *ctx);
+void eval_scope_end(EvalContext *ctx);
 void eval_init(EvalContext *ctx);
 void eval_end(EvalContext *ctx);
 char *eval_stringify(char *buff, size_t len, Number num);

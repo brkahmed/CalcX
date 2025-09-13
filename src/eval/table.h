@@ -1,6 +1,7 @@
 #ifndef EVAL_TABLE_H
 #define EVAL_TABLE_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #include "types.h"
@@ -30,10 +31,11 @@ typedef struct TableEntry {
     struct TableEntry *next;
 } TableEntry;
 
-typedef struct {
+typedef struct Table {
     TableEntry **entries;
     size_t count;
     size_t size;
+    struct Table *enclosing;
 } Table;
 
 typedef struct {
@@ -47,7 +49,7 @@ void table_init(Table *table);
 void table_clear(Table *table);
 void table_iter_init(Table *table, TableIterator *iterator);
 TableEntry *table_iter_next(TableIterator *iterator);
-TableEntry *table_lookup(Table *table, const char *name);
+TableEntry *table_lookup(Table *table, const char *name, bool look_enclosing);
 TableEntry *table_set_cfunction(Table *table, const char *name, void *func, size_t arg_count);
 TableEntry *table_set_function(Table *table, const char *name, Function func, size_t min_args, size_t max_args);
 TableEntry *table_set_number(Table *table, const char *name, Number value);

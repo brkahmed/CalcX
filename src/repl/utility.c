@@ -1,6 +1,7 @@
 #include "replxx.h"
 
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -8,7 +9,9 @@
 
 void show_result(const char *input, replxx_hints *hints, int *context_len, ReplxxColor *color, void *_ctx) {
     EvalContext *ctx = (EvalContext *)_ctx;
-    Number result    = eval(ctx, input);
+    eval_scope_new(ctx);
+    Number result = eval(ctx, input);
+    eval_scope_end(ctx);
     if (ctx->error_type) return;
     *color      = REPLXX_COLOR_LIGHTGRAY;
     size_t skip = *context_len + 2; // 2 is a good number <3
@@ -22,7 +25,7 @@ void complete(const char *input, replxx_completions *completions, int *context_l
     EvalContext *ctx = (EvalContext *)_ctx;
     const char *name = input + strlen(input) - *context_len;
     TableIterator iterator;
-    table_iter_init(&ctx->table, &iterator);
+    table_iter_init(ctx->table, &iterator);
     for (TableEntry *e; (e = table_iter_next(&iterator));) {
         if (strncasecmp(name, e->name, *context_len) == 0) replxx_add_completion(completions, e->name);
     }
@@ -53,7 +56,7 @@ void highlight(char const *input, ReplxxColor *colors, int size, void *_ctx) {
             int start = i;
             while (isalnum(input[i]) || input[i] == '_') i++;
             char *name    = strndup(input + start, i - start);
-            TableEntry *e = table_lookup(&ctx->table, name);
+            TableEntry *e = table_lookup(ctx->table, name, true);
             free(name);
             ReplxxColor color;
             if (!e)
