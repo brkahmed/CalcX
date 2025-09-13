@@ -41,13 +41,13 @@ typedef struct Table {
 typedef struct {
     Table *table;
     size_t idx;
-    TableEntry *head;
     TableEntry *next;
+    bool iter_enclosing;
 } TableIterator;
 
 void table_init(Table *table);
 void table_clear(Table *table);
-void table_iter_init(Table *table, TableIterator *iterator);
+void table_iter_init(Table *table, TableIterator *iterator, bool iter_enclosing);
 TableEntry *table_iter_next(TableIterator *iterator);
 TableEntry *table_lookup(Table *table, const char *name, bool look_enclosing);
 TableEntry *table_set_cfunction(Table *table, const char *name, void *func, size_t arg_count);

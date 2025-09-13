@@ -25,7 +25,7 @@ void complete(const char *input, replxx_completions *completions, int *context_l
     EvalContext *ctx = (EvalContext *)_ctx;
     const char *name = input + strlen(input) - *context_len;
     TableIterator iterator;
-    table_iter_init(ctx->table, &iterator);
+    table_iter_init(ctx->table, &iterator, true);
     for (TableEntry *e; (e = table_iter_next(&iterator));) {
         if (strncasecmp(name, e->name, *context_len) == 0) replxx_add_completion(completions, e->name);
     }

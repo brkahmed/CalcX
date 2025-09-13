@@ -60,20 +60,27 @@ void table_clear(Table *table) {
     table->count = 0;
 }
 
-void table_iter_init(Table *table, TableIterator *iterator) {
-    iterator->table = table;
-    iterator->idx   = 0;
-    iterator->next  = NULL;
+void table_iter_init(Table *table, TableIterator *iterator, bool iter_enclosing) {
+    iterator->table          = table;
+    iterator->idx            = 0;
+    iterator->iter_enclosing = iter_enclosing;
+    iterator->next           = NULL;
 }
 
 TableEntry *table_iter_next(TableIterator *iterator) {
+    if (!iterator->table) return NULL;
     TableEntry *result;
     if ((result = iterator->next)) {
         iterator->next = result->next;
         return result;
     }
     while (iterator->idx < iterator->table->size && !result) result = iterator->table->entries[iterator->idx++];
-    if (result) iterator->next = result->next;
+    if (result)
+        iterator->next = result->next;
+    else if (iterator->iter_enclosing) {
+        table_iter_init(iterator->table->enclosing, iterator, iterator->iter_enclosing);
+        result = table_iter_next(iterator);
+    }
     return result;
 }
 
